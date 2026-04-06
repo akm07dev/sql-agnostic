@@ -11,8 +11,11 @@ from groq import Groq
 from dotenv import load_dotenv
 import urllib.parse
 import base64
+import os
 
+# Load .env first, if not found or incomplete, load .env.local 
 load_dotenv()
+load_dotenv(".env.local")
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -63,7 +66,12 @@ def _extract_jwt_from_cookies(request: Request) -> str | None:
     try:
         raw_val = urllib.parse.unquote(raw_val)
         if raw_val.startswith("base64-"):
-            raw_val = base64.b64decode(raw_val[7:]).decode("utf-8")
+            b64_str = raw_val[7:]
+            # Next.js/Supabase uses base64url encoding, which Python's strict b64 needs padded and chars replaced
+            b64_str = b64_str.replace("-", "+").replace("_", "/")
+            b64_str += "=" * ((4 - len(b64_str) % 4) % 4)
+            raw_val = base64.b64decode(b64_str).decode("utf-8")
+        
         token_data = json.loads(raw_val)
         if isinstance(token_data, list):
             return token_data[0]
@@ -79,7 +87,7 @@ def _extract_jwt_from_cookies(request: Request) -> str | None:
 # JWKS setup
 # ---------------------------------------------------------------------------
 
-supabase_url = os.getenv("SUPABASE_URL")
+supabase_url = os.getenv("SUPABASE_URL") or os.getenv("NEXT_PUBLIC_SUPABASE_URL")
 jwks_client: PyJWKClient | None = None
 if supabase_url:
     jwks_url = f"{supabase_url.rstrip('/')}/auth/v1/.well-known/jwks.json"

@@ -20,12 +20,17 @@ export default function LoginPage() {
 
   const handleGoogleLogin = async () => {
     setLoading(true);
-    await supabase.auth.signInWithOAuth({
+    const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo: `${location.origin}/auth/callback`,
       },
     });
+    // Ensure loading drops if network rejects before redirect
+    if (error) {
+      alert("Google SSO Failed. Please ensure Google is enabled in your Supabase Auth Providers Settings.");
+      setLoading(false);
+    }
   };
 
   return (
@@ -46,13 +51,22 @@ export default function LoginPage() {
           ← Back to translator
         </Link>
 
-        <div className="flex flex-col mb-6 text-left">
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-            SQLAgnostic Auth
-          </h1>
-          <p className="text-sm text-slate-500 dark:text-zinc-400 mt-1 font-medium">
-            Sign in to unlock AI refinement workflows
-          </p>
+        {/* Visual Mode Tabs */}
+        <div className="flex gap-2 w-full p-1 bg-slate-200 dark:bg-black/30 rounded-lg mb-6 shadow-inner">
+          <button
+            onClick={() => setMode("signin")}
+            type="button"
+            className={`flex-1 py-1.5 text-sm font-semibold rounded-md transition-all ${mode === "signin" ? "bg-white dark:bg-zinc-800 shadow-sm text-slate-900 dark:text-white" : "text-slate-500 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-zinc-300"}`}
+          >
+            Sign In
+          </button>
+          <button
+            onClick={() => setMode("signup")}
+            type="button"
+            className={`flex-1 py-1.5 text-sm font-semibold rounded-md transition-all ${mode === "signup" ? "bg-white dark:bg-zinc-800 shadow-sm text-slate-900 dark:text-white" : "text-slate-500 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-zinc-300"}`}
+          >
+            Sign Up
+          </button>
         </div>
 
         {/* Status message */}
@@ -107,7 +121,7 @@ export default function LoginPage() {
         </div>
 
         {/* Email / Password Form */}
-        <form className="flex flex-col w-full gap-4 text-slate-800 dark:text-zinc-300">
+        <form action={mode === "signin" ? signIn : signUp} className="flex flex-col w-full gap-4 text-slate-800 dark:text-zinc-300">
           <div>
             <Label htmlFor="email" className="sr-only">Email</Label>
             <Input
@@ -145,40 +159,12 @@ export default function LoginPage() {
 
           <Button
             type="submit"
-            formAction={mode === "signin" ? signIn : signUp}
             className="w-full h-11 bg-slate-900 dark:bg-indigo-600 hover:bg-slate-800 dark:hover:bg-indigo-500 text-white dark:text-white shadow-md font-semibold transition-all mt-2"
             disabled={loading}
           >
             {mode === "signin" ? "Sign In" : "Create Account"}
           </Button>
         </form>
-
-        {/* Toggle mode */}
-        <p className="text-center text-sm text-slate-500 dark:text-zinc-400 mt-6 font-medium">
-          {mode === "signin" ? (
-            <>
-              Don&apos;t have an account?{" "}
-              <button
-                type="button"
-                onClick={() => setMode("signup")}
-                className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 font-bold transition-colors underline decoration-indigo-500/30 underline-offset-4"
-              >
-                Sign up
-              </button>
-            </>
-          ) : (
-            <>
-              Already have an account?{" "}
-              <button
-                type="button"
-                onClick={() => setMode("signin")}
-                className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 font-bold transition-colors underline decoration-indigo-500/30 underline-offset-4"
-              >
-                Sign in
-              </button>
-            </>
-          )}
-        </p>
 
       </div>
     </div>
