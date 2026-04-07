@@ -103,7 +103,7 @@ def _decode_jwt(token: str) -> dict:
         return jwt.decode(
             token,
             signing_key.key,
-            algorithms=["RS256"],
+            algorithms=["RS256", "ES256", "HS256"],
             audience="authenticated",
         )
     except jwt.PyJWTError as e:
@@ -266,7 +266,7 @@ def refine_sql(
                 },
                 {"role": "user", "content": prompt},
             ],
-            model="deepseek-r1-distill-llama-70b",
+            model="qwen-2.5-coder-32b",
             temperature=0.1,
         )
 
