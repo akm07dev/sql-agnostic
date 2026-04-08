@@ -318,10 +318,10 @@ def refine_sql(
                             "role": "system",
                             "content": (
                                 "You are an expert SQL translation agent. "
-                                "You MUST return your answer as a valid JSON object containing exactly one key named 'sql'. "
-                                "The value must be the raw corrected SQL query string. "
-                                "CRITICAL: Always preserve and map the user's original SQL comments in your final output. "
-                                "CRITICAL: If you make a highly complex logical shift (e.g. replacing a function not supported by the target dialect), add brief, helpful inline SQL comments (`--`) explaining why. "
+                                "You MUST return your answer as a valid JSON object containing exactly two keys: 'sql' and 'explanation'. "
+                                "The 'sql' value MUST be a beautifully structured, highly readable, multi-line SQL query string using `\\n` for line breaks and proper indentation. "
+                                "The 'explanation' value MUST be a human-readable text strictly explaining the semantic changes you made, especially if there was a complex logical shift (e.g., MySQL session variables instead of ROW_NUMBER). "
+                                "Do NOT minify the SQL. Make it as readable as possible natively. "
                                 "Do NOT include any conversational text outside of the JSON object."
                             ),
                         },
@@ -344,9 +344,12 @@ def refine_sql(
             raise Exception(f"All model fallbacks failed. Groq may be experiencing an outage. Last error: {last_error}")
 
         raw_content = chat_completion.choices[0].message.content or "{}"
+        explanation = ""
         try:
             import json
-            refined_sql = json.loads(raw_content).get("sql", raw_content)
+            parsed = json.loads(raw_content)
+            refined_sql = parsed.get("sql", raw_content)
+            explanation = parsed.get("explanation", "")
         except Exception:
             refined_sql = raw_content
             
@@ -373,6 +376,6 @@ def refine_sql(
         except Exception:
             pass # Fall back to raw AI output if SQLGlot refuses to parse the AI's structure
 
-        return {"success": True, "sql": refined_sql}
+        return {"success": True, "sql": refined_sql, "explanation": explanation}
     except Exception as e:
         return {"success": False, "error": str(e)}

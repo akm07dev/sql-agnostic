@@ -4,9 +4,9 @@ import { useState, useEffect } from "react";
 import { Editor, DiffEditor } from "@monaco-editor/react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel, SelectSeparator } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeftRight, Sparkles, ThumbsDown, ThumbsUp, Loader2, LogOut, Code2, ChevronRight, Minimize2, Settings2, Moon, Sun } from "lucide-react";
+import { ArrowLeftRight, Sparkles, ThumbsDown, ThumbsUp, Loader2, LogOut, Code2, ChevronRight, Minimize2, Settings2, Moon, Sun, Copy, Check, ClipboardPaste } from "lucide-react";
 import { getCategorizedDialects, type SqlDialect } from "@/lib/dialects";
 import { createClient } from "@/utils/supabase/client";
 import type { User } from "@supabase/supabase-js";
@@ -24,6 +24,30 @@ export default function Home() {
   const [showRefinement, setShowRefinement] = useState(false);
   const [instructions, setInstructions] = useState("");
   const [isRefining, setIsRefining] = useState(false);
+  const [aiExplanation, setAiExplanation] = useState("");
+
+  const [sourceCopied, setSourceCopied] = useState(false);
+  const [targetCopied, setTargetCopied] = useState(false);
+  const [sourcePasted, setSourcePasted] = useState(false);
+
+  const copyToClipboard = (text: string, setCopied: (v: boolean) => void) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handlePaste = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text) {
+        setSourceCode(text);
+        setSourcePasted(true);
+        setTimeout(() => setSourcePasted(false), 2000);
+      }
+    } catch (err) {
+      console.error("Failed to read clipboard contents", err);
+    }
+  };
 
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
@@ -37,6 +61,12 @@ export default function Home() {
 
   useEffect(() => {
     setMounted(true);
+    // Hydrate persistent user prefs safely completely exclusively on the client side
+    const savedSource = localStorage.getItem("sqlagnostic_source") as SqlDialect;
+    const savedTarget = localStorage.getItem("sqlagnostic_target") as SqlDialect;
+    if (savedSource) setSourceDialect(savedSource);
+    if (savedTarget) setTargetDialect(savedTarget);
+
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
@@ -114,7 +144,7 @@ export default function Home() {
     try {
       const apiRes = await fetch("/api/refine", {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
           "X-Requested-With": "XMLHttpRequest"
         },
@@ -126,7 +156,7 @@ export default function Home() {
           userInstructions: instructions,
         }),
       });
-      
+
       if (!apiRes.ok) {
         let errStr = "Refinement failed";
         if (apiRes.status === 401) errStr = "Please sign in to use AI refinement";
@@ -139,6 +169,7 @@ export default function Home() {
 
       if (res.success && res.sql) {
         setAiRefinedCode(res.sql);
+        setAiExplanation(res.explanation || "");
         setTargetView("ai");
         setShowRefinement(false);
         setInstructions("");
@@ -161,7 +192,7 @@ export default function Home() {
     if (!isPositive && user) {
       setShowRefinement(true);
     }
-    
+
     // Safely fire-and-forget telemetry insertion
     supabase.from('feedback').insert({
       user_id: user ? user.id : null,
@@ -183,22 +214,48 @@ export default function Home() {
 
   const isDark = !mounted ? true : (theme === 'system' ? systemTheme === 'dark' : theme === 'dark');
 
+  const getDialect = (value: string) => {
+    const all = [...popular, ...other];
+    return all.find(d => d.value === value);
+  };
+
+  const DialectIcon = ({ icon, className = "w-4 h-4" }: { icon: string; className?: string }) => (
+    <span className="inline-flex items-center justify-center shrink-0 w-5 h-5 rounded bg-slate-100 dark:bg-zinc-800 p-0.5">
+      <img src={icon} alt="" className={`${className} dark:invert opacity-80`} />
+    </span>
+  );
+
   const DialectOptions = () => (
     <>
-      <div className="px-3 py-2 text-[10px] uppercase font-bold tracking-wider text-slate-400 dark:text-zinc-500">Popular</div>
-      {popular.map((d) => (
-        <SelectItem key={d.value} value={d.value} className="text-xs cursor-pointer focus:bg-slate-100 dark:focus:bg-white/5 transition-colors">{d.label}</SelectItem>
-      ))}
-      <div className="px-3 py-2 text-[10px] uppercase font-bold tracking-wider text-slate-400 dark:text-zinc-500 mt-2 border-t border-slate-200 dark:border-white/5">All Dialects</div>
-      {other.map((d) => (
-        <SelectItem key={d.value} value={d.value} className="text-xs cursor-pointer focus:bg-slate-100 dark:focus:bg-white/5 transition-colors">{d.label}</SelectItem>
-      ))}
+      <SelectGroup>
+        <SelectLabel className="text-[10px] uppercase font-bold tracking-wider text-slate-400 dark:text-zinc-500">Popular</SelectLabel>
+        {popular.map((d) => (
+          <SelectItem key={d.value} value={d.value} className="cursor-pointer">
+            <span className="flex items-center gap-2">
+              <DialectIcon icon={d.icon} className="w-4 h-4" />
+              {d.label}
+            </span>
+          </SelectItem>
+        ))}
+      </SelectGroup>
+      <SelectSeparator className="my-1 border-slate-200 dark:border-white/5" />
+      <SelectGroup>
+        <SelectLabel className="text-[10px] uppercase font-bold tracking-wider text-slate-400 dark:text-zinc-500">All Dialects</SelectLabel>
+        {other.map((d) => (
+          <SelectItem key={d.value} value={d.value} className="cursor-pointer">
+            <span className="flex items-center gap-2">
+              <DialectIcon icon={d.icon} className="w-4 h-4" />
+              {d.label}
+            </span>
+          </SelectItem>
+        ))}
+      </SelectGroup>
     </>
   );
 
   return (
-    <div className="flex flex-col h-screen w-full bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-300 font-sans overflow-hidden relative selection:bg-indigo-200 dark:selection:bg-indigo-500/30 transition-colors duration-500">
-      
+    <div className="flex flex-col min-h-screen w-full bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-300 font-sans overflow-auto relative selection:bg-indigo-200 dark:selection:bg-indigo-500/30 transition-colors duration-500">
+
       {/* Subtle background glow */}
       <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-500/10 dark:bg-indigo-900/10 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-blue-500/10 dark:bg-blue-900/10 blur-[120px] pointer-events-none" />
@@ -210,97 +267,143 @@ export default function Home() {
             <Code2 size={16} strokeWidth={2.5} />
           </div>
           <div className="flex flex-col">
-            <span className="text-[13px] font-semibold tracking-tight text-slate-900 dark:text-white leading-tight">SQLAgnostic</span>
-            <span className="text-[10px] text-slate-500 dark:text-zinc-500 font-medium">Dialect Converter</span>
+            <span className="text-[14px] font-bold tracking-tight text-slate-950 dark:text-gray-50 leading-tight">SQLAgnostic</span>
+            <span className="text-[10px] text-slate-500 dark:text-zinc-400 font-semibold uppercase tracking-widest mt-0.5">Workbench</span>
           </div>
         </div>
-        
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-all duration-300 rounded-md hover:bg-slate-200/50 dark:hover:bg-white/5" onClick={() => setTheme(isDark ? 'light' : 'dark')}>
-             {mounted && isDark ? <Sun className="w-4 h-4 opacity-70" /> : <Moon className="w-4 h-4 opacity-70" />}
-          </Button>
 
-          <Button variant="ghost" size="sm" className="h-8 text-xs text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white transition-all duration-300 rounded-md hover:bg-slate-200/50 dark:hover:bg-white/5" onClick={swapDialects}>
-            <ArrowLeftRight className="w-3.5 h-3.5 mr-2 opacity-70" />
-            Reverse
-          </Button>
-          
-          <div className="h-4 w-[1px] bg-slate-300 dark:bg-white/10 mx-1"></div>
+          <div className="flex items-center gap-4">
+            <Select value={mounted ? (theme || "system") : "system"} onValueChange={(v) => { if (v) setTheme(v); }}>
+              <SelectTrigger className="h-8 w-auto px-3 border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-zinc-900 rounded-full text-xs font-semibold shadow-sm focus:ring-1 focus:ring-indigo-500/50">
+                <div className="flex items-center gap-2">
+                  {mounted && (theme === 'dark' || (theme === 'system' && systemTheme === 'dark')) ? <Moon className="w-3.5 h-3.5 text-indigo-400" /> : <Sun className="w-3.5 h-3.5 text-yellow-500" />}
+                  <SelectValue />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="light">Light</SelectItem>
+                <SelectItem value="dark">Dark</SelectItem>
+                <SelectItem value="system">System</SelectItem>
+              </SelectContent>
+            </Select>
 
-          {authLoading ? (
-            <Loader2 className="animate-spin w-4 h-4 text-slate-400 dark:text-zinc-600" />
-          ) : user ? (
-            <div className="flex items-center gap-3">
-              <div className="flex flex-col text-right">
-                <span className="text-[11px] font-medium text-slate-600 dark:text-zinc-300">{user.email}</span>
-                <span className="text-[9px] text-slate-400 dark:text-zinc-500 uppercase tracking-wider">Authenticated</span>
+            <div className="h-4 w-[1px] bg-slate-300 dark:bg-white/10 mx-1"></div>
+
+            {authLoading ? (
+              <Loader2 className="animate-spin w-4 h-4 text-slate-400 dark:text-zinc-600" />
+            ) : user ? (
+              <div className="flex items-center gap-3">
+                <div className="flex flex-col text-right">
+                  <span className="text-[11px] font-medium text-slate-600 dark:text-zinc-300">{user.email}</span>
+                  <span className="text-[9px] text-slate-400 dark:text-zinc-500 uppercase tracking-wider">Authenticated</span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleSignOut}
+                  className="h-8 w-8 text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-white/5 rounded-full transition-all duration-300"
+                  title="Sign Out"
+                >
+                  <LogOut size={14} />
+                </Button>
               </div>
+            ) : (
               <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleSignOut}
-                className="h-8 w-8 text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-white/5 rounded-full transition-all duration-300"
-                title="Sign Out"
+                variant="default"
+                size="sm"
+                onClick={() => window.location.href = "/login"}
+                className="h-8 text-xs px-4 bg-slate-900 dark:bg-white text-white dark:text-black hover:bg-slate-800 dark:hover:bg-zinc-200 rounded-md font-semibold transition-all duration-300 shadow-md dark:shadow-[0_0_15px_rgba(255,255,255,0.1)]"
               >
-                <LogOut size={14} />
+                Sign In
               </Button>
-            </div>
-          ) : (
-            <Button
-              variant="default"
-              size="sm"
-              onClick={() => window.location.href = "/login"}
-              className="h-8 text-xs px-4 bg-slate-900 dark:bg-white text-white dark:text-black hover:bg-slate-800 dark:hover:bg-zinc-200 rounded-md font-semibold transition-all duration-300 shadow-md dark:shadow-[0_0_15px_rgba(255,255,255,0.1)]"
-            >
-              Sign In
-            </Button>
-          )}
-        </div>
+            )}
+          </div>
       </header>
 
+      {/* Top Routing Header Centralized below main header */}
+      <div className="w-full flex justify-center items-center py-5 -mb-2 z-10 gap-3 border-b border-transparent bg-slate-50/50 dark:bg-zinc-950/80 backdrop-blur-3xl">
+        <Select value={sourceDialect} onValueChange={(v: string | null) => {
+          if (!v) return;
+          const newSource = v as SqlDialect;
+          if (newSource === targetDialect) {
+            swapDialects();
+          } else {
+            setSourceDialect(newSource);
+            localStorage.setItem("sqlagnostic_source", newSource);
+          }
+        }}>
+          <SelectTrigger className="w-[210px] h-[36px] border border-slate-300 dark:border-white/10 bg-white dark:bg-zinc-900 text-sm font-semibold rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500/50 dark:focus:ring-indigo-500/40">
+            <span className="flex items-center gap-2 truncate">
+              <DialectIcon icon={getDialect(sourceDialect)?.icon ?? ""} className="w-4 h-4 shrink-0" />
+              {getDialect(sourceDialect)?.label || sourceDialect}
+            </span>
+          </SelectTrigger>
+          <SelectContent className="rounded-xl shadow-2xl">
+            <DialectOptions />
+          </SelectContent>
+        </Select>
+
+        <Button variant="outline" size="icon" className="h-8 w-8 rounded-full border-slate-300 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-sm hover:shadow-md hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-white transition-all" onClick={swapDialects} title="Reverse Dialects">
+          <ArrowLeftRight className="w-3.5 h-3.5" />
+        </Button>
+
+        <Select value={targetDialect} onValueChange={(v: string | null) => {
+          if (!v) return;
+          const newTarget = v as SqlDialect;
+          if (newTarget === sourceDialect) {
+            swapDialects();
+          } else {
+            setTargetDialect(newTarget);
+            localStorage.setItem("sqlagnostic_target", newTarget);
+          }
+        }}>
+          <SelectTrigger className="w-[210px] h-[36px] border border-indigo-200 dark:border-indigo-500/20 bg-indigo-50/50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 text-sm font-semibold rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500/50">
+            <span className="flex items-center gap-2 truncate">
+              <DialectIcon icon={getDialect(targetDialect)?.icon ?? ""} className="w-4 h-4 shrink-0" />
+              {getDialect(targetDialect)?.label || targetDialect}
+            </span>
+          </SelectTrigger>
+          <SelectContent className="rounded-xl shadow-2xl">
+            <DialectOptions />
+          </SelectContent>
+        </Select>
+      </div>
+
       {/* Main Dual-Pane Environment */}
-      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative z-10">
-        
+      <div className="flex-1 flex flex-col lg:flex-row p-6 pt-4 gap-6 relative z-10 max-w-[1700px] mx-auto w-full">
+
         {/* SOURCE PANE */}
-        <div className="flex-1 flex flex-col border-r border-slate-200 dark:border-white/5 min-w-0 bg-transparent">
+        <div className="flex-1 flex flex-col min-w-0 h-[70vh] bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl shadow-black/5 dark:shadow-black/40 overflow-hidden group">
           {/* Pane Toolbar */}
-          <div className="h-11 flex items-center px-4 border-b border-slate-200 dark:border-white/5 bg-slate-100/90 dark:bg-zinc-950/80 backdrop-blur-md shrink-0 justify-between">
+          <div className="h-12 flex items-center px-4 border-b border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-zinc-900/50 shrink-0 justify-between">
             <div className="flex items-center gap-2">
-              <div className="flex items-center justify-center w-5 h-5 rounded bg-slate-200 dark:bg-white/5 border border-slate-300 dark:border-white/10">
-                <div className="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-zinc-400" />
-              </div>
-              <div className="text-[11px] font-semibold text-slate-500 dark:text-zinc-400 tracking-wide">Source</div>
-              <ChevronRight className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-600 mx-1" />
-              <Select value={sourceDialect} onValueChange={(v: string | null) => {
-                if (!v) return;
-                const newSource = v as SqlDialect;
-                if (newSource === targetDialect) {
-                  swapDialects();
-                } else {
-                  setSourceDialect(newSource);
-                }
-              }}>
-                <SelectTrigger className="w-auto border-0 bg-transparent h-8 text-xs font-mono text-slate-700 dark:text-zinc-200 focus:ring-0 px-2 py-0 hover:bg-slate-200/50 dark:hover:bg-white/5 rounded-md transition-all shadow-none">
-                  <SelectValue placeholder="Select dialect" />
-                </SelectTrigger>
-                <SelectContent className="bg-white dark:bg-zinc-900 border-slate-200 dark:border-white/10 shadow-2xl rounded-xl">
-                  <DialectOptions />
-                </SelectContent>
-              </Select>
+              <div className="w-1.5 h-1.5 rounded-full bg-slate-400 dark:bg-zinc-500" />
+              <div className="text-[12px] font-bold text-slate-700 dark:text-zinc-300 tracking-wide uppercase">Input</div>
             </div>
-            
-            <Button
-              onClick={handleTranspile}
-              disabled={isTranspiling}
-              size="sm"
-              className="h-7 text-xs bg-indigo-600 hover:bg-indigo-500 text-white rounded-md px-3 shadow-md border border-indigo-500/50 transition-all duration-300"
-            >
-              {isTranspiling ? <Loader2 className="animate-spin w-3 h-3 mr-1.5" /> : null}
-              Transpile
-            </Button>
+
+            <div className="flex items-center gap-1.5">
+              <Button
+                onClick={handlePaste}
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-white/5 rounded-sm transition-colors"
+                title="Paste SQL"
+              >
+                {sourcePasted ? <Check size={13} className="text-green-500" /> : <ClipboardPaste size={13} />}
+              </Button>
+              <Button
+                onClick={() => copyToClipboard(sourceCode, setSourceCopied)}
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-white/5 rounded-sm transition-colors"
+                title="Copy Source SQL"
+              >
+                {sourceCopied ? <Check size={13} className="text-green-500" /> : <Copy size={13} />}
+              </Button>
+            </div>
           </div>
           {/* Editor Container */}
-          <div className="flex-1 relative overflow-hidden bg-white dark:bg-black/20">
+          <div className="flex-1 relative bg-white dark:bg-black/20">
             <div className="absolute top-3 right-5 z-10 opacity-30 text-[10px] font-mono text-slate-400 dark:text-zinc-500 pointer-events-none select-none tracking-widest">INPUT</div>
             <Editor
               height="100%"
@@ -308,9 +411,9 @@ export default function Home() {
               theme={isDark ? "vs-dark" : "vs-light"}
               value={sourceCode}
               onChange={(value) => setSourceCode(value || "")}
-              options={{ 
-                minimap: { enabled: false }, 
-                fontSize: 13, 
+              options={{
+                minimap: { enabled: false },
+                fontSize: 13,
                 fontFamily: "var(--font-geist-mono), monospace",
                 scrollBeyondLastLine: false,
                 lineHeight: 24,
@@ -324,32 +427,37 @@ export default function Home() {
           </div>
         </div>
 
+        {/* CENTRALIZED ACTION COLUMN */}
+        <div className="hidden lg:flex flex-col justify-center items-center gap-4 z-20 px-2 relative -mx-2">
+          <Button
+            onClick={handleTranspile}
+            disabled={isTranspiling}
+            className="w-14 h-14 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white shadow-[0_0_20px_rgba(79,70,229,0.3)] hover:shadow-[0_0_30px_rgba(79,70,229,0.5)] transition-all duration-300 font-semibold border-4 border-slate-50 dark:border-zinc-950 flex shadow-indigo-600/30 items-center justify-center p-0"
+            title="Transpile Code"
+          >
+            {isTranspiling ? <Loader2 className="animate-spin w-6 h-6" /> : <ChevronRight className="w-8 h-8 ml-0.5" />}
+          </Button>
+
+          <Button
+            variant="outline"
+            className="w-12 h-12 rounded-full bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 text-indigo-600 dark:text-indigo-400 border border-slate-200 dark:border-white/10 shadow-lg hover:shadow-xl transition-all duration-300 p-0"
+            onClick={() => {
+              if (!user) return window.location.href = "/login";
+              setShowRefinement(!showRefinement);
+            }}
+            title="AI Refine"
+          >
+            <Sparkles className="w-5 h-5" />
+          </Button>
+        </div>
+
         {/* TARGET PANE */}
-        <div className="flex-1 flex flex-col min-w-0 bg-transparent relative">
+        <div className="flex-1 flex flex-col min-w-0 h-[70vh] bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl shadow-black/5 dark:shadow-black/40 overflow-hidden relative group">
           {/* Pane Toolbar */}
-          <div className="h-11 flex items-center px-4 border-b border-slate-200 dark:border-white/5 bg-slate-100/90 dark:bg-zinc-950/80 backdrop-blur-md shrink-0 justify-between">
+          <div className="h-12 flex items-center px-4 border-b border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-zinc-900/50 shrink-0 justify-between">
             <div className="flex items-center gap-2">
-              <div className="flex items-center justify-center w-5 h-5 rounded bg-indigo-100 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20">
-                <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 dark:bg-indigo-400" />
-              </div>
-              <div className="text-[11px] font-semibold text-slate-500 dark:text-zinc-400 tracking-wide">Target</div>
-              <ChevronRight className="w-3.5 h-3.5 text-slate-400 dark:text-zinc-600 mx-1" />
-              <Select value={targetDialect} onValueChange={(v: string | null) => {
-                if (!v) return;
-                const newTarget = v as SqlDialect;
-                if (newTarget === sourceDialect) {
-                  swapDialects();
-                } else {
-                  setTargetDialect(newTarget);
-                }
-              }}>
-                <SelectTrigger className="w-auto border-0 bg-transparent h-8 text-xs font-mono text-indigo-600 dark:text-indigo-400 focus:ring-0 px-2 py-0 hover:bg-slate-200/50 dark:hover:bg-white/5 rounded-md transition-all shadow-none">
-                  <SelectValue placeholder="Select dialect" />
-                </SelectTrigger>
-                <SelectContent className="bg-white dark:bg-zinc-900 border-slate-200 dark:border-white/10 shadow-2xl rounded-xl">
-                  <DialectOptions />
-                </SelectContent>
-              </Select>
+              <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 dark:bg-indigo-400" />
+              <div className="text-[12px] font-bold text-slate-700 dark:text-zinc-300 tracking-wide uppercase">Output</div>
               {isTranspiling && <Loader2 className="animate-spin w-3.5 h-3.5 text-slate-400 dark:text-zinc-500 ml-2" />}
 
               {aiRefinedCode && (
@@ -361,8 +469,25 @@ export default function Home() {
               )}
             </div>
 
-            {/* Target Actions */}
             <div className="flex items-center gap-1.5">
+              <Button
+                onClick={() => {
+                  if (targetView === "diff") {
+                    const combined = `-- SQLGlot Output\n${targetCode}\n\n-- AI Refined Output\n${aiRefinedCode}`;
+                    copyToClipboard(combined, setTargetCopied);
+                  } else {
+                    copyToClipboard(targetView === "ai" ? aiRefinedCode : targetCode, setTargetCopied);
+                  }
+                }}
+                disabled={!targetCode}
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7 text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-white/5 disabled:opacity-30 rounded-sm transition-colors"
+                title={targetView === "diff" ? "Copy Both Queries" : "Copy Target SQL"}
+              >
+                {targetCopied ? <Check size={13} className="text-green-500" /> : <Copy size={13} />}
+              </Button>
+
               <div className="flex items-center bg-slate-200/50 dark:bg-white/5 rounded-md p-0.5 border border-slate-300 dark:border-white/5">
                 <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-500 dark:text-zinc-400 hover:text-green-600 dark:hover:text-green-400 hover:bg-slate-300/50 dark:hover:bg-white/5 rounded-sm transition-colors" onClick={() => handleFeedback(true)}>
                   <ThumbsUp size={13} />
@@ -372,28 +497,11 @@ export default function Home() {
                 </Button>
               </div>
 
-              <div className="w-[1px] h-4 bg-slate-300 dark:bg-white/10 mx-1"></div>
-
-              <Button
-                variant="default"
-                size="sm"
-                className="h-8 text-xs bg-indigo-100 dark:bg-indigo-600 text-indigo-700 dark:text-white hover:bg-indigo-200 dark:hover:bg-indigo-500 shadow-md dark:shadow-[0_0_15px_rgba(79,70,229,0.3)] dark:hover:shadow-[0_0_20px_rgba(79,70,229,0.5)] border border-indigo-200 dark:border-indigo-500/50 rounded-md px-3 transition-all duration-300"
-                onClick={() => {
-                  if (!user) {
-                    window.location.href = "/login";
-                    return;
-                  }
-                  setShowRefinement(!showRefinement);
-                }}
-              >
-                <Sparkles size={13} className="mr-1.5" /> 
-                {isRefining ? "Refining..." : "Refine AI"}
-              </Button>
             </div>
           </div>
 
-           {/* Editor Container */}
-          <div className="flex-1 relative overflow-hidden bg-slate-50/50 dark:bg-black/20">
+          {/* Editor Container */}
+          <div className="flex-1 relative bg-slate-50/50 dark:bg-black/20">
             <div className="absolute top-3 right-5 z-10 opacity-30 text-[10px] font-mono text-slate-400 dark:text-zinc-500 pointer-events-none select-none tracking-widest">
               {targetView === "diff" ? "AI DIFF" : targetView === "ai" ? "AI OUTPUT" : "TRANSPILER OUTPUT"}
             </div>
@@ -404,10 +512,10 @@ export default function Home() {
                 theme={isDark ? "vs-dark" : "vs-light"}
                 original={targetCode}
                 modified={aiRefinedCode}
-                options={{ 
-                  readOnly: true, 
-                  minimap: { enabled: false }, 
-                  fontSize: 13, 
+                options={{
+                  readOnly: true,
+                  minimap: { enabled: false },
+                  fontSize: 13,
                   fontFamily: "var(--font-geist-mono), monospace",
                   scrollBeyondLastLine: false,
                   lineHeight: 24,
@@ -421,10 +529,10 @@ export default function Home() {
                 language="sql"
                 theme={isDark ? "vs-dark" : "vs-light"}
                 value={targetView === "ai" ? aiRefinedCode : targetCode}
-                options={{ 
-                  readOnly: true, 
-                  minimap: { enabled: false }, 
-                  fontSize: 13, 
+                options={{
+                  readOnly: true,
+                  minimap: { enabled: false },
+                  fontSize: 13,
                   fontFamily: "var(--font-geist-mono), monospace",
                   scrollBeyondLastLine: false,
                   lineHeight: 24,
@@ -451,8 +559,8 @@ export default function Home() {
               </div>
               <div className="p-4 flex flex-col gap-3">
                 <div className="relative flex-1">
-                  <Textarea 
-                    placeholder="Optional: e.g. Highlight uppercase logic, strictly quote all columns, or map to explicit date functions..." 
+                  <Textarea
+                    placeholder="Optional: e.g. Highlight uppercase logic, strictly quote all columns, or map to explicit date functions..."
                     className="w-full resize-none bg-white dark:bg-black/50 border-slate-300 dark:border-white/10 focus-visible:ring-1 focus-visible:ring-indigo-500 text-sm min-h-[90px] placeholder:text-slate-400 dark:placeholder:text-zinc-600 rounded-lg shadow-inner text-slate-800 dark:text-zinc-300 pb-6"
                     value={instructions}
                     onChange={(e) => setInstructions(e.target.value)}
@@ -469,9 +577,9 @@ export default function Home() {
                     {instructions.length} / 150
                   </div>
                 </div>
-                <Button 
-                  onClick={handleRefine} 
-                  disabled={isRefining} 
+                <Button
+                  onClick={handleRefine}
+                  disabled={isRefining}
                   className="bg-slate-900 dark:bg-zinc-100 hover:bg-slate-800 dark:hover:bg-white text-white dark:text-zinc-900 w-full h-10 rounded-lg font-semibold shadow-md transition-all duration-300 disabled:opacity-50"
                 >
                   {isRefining ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <Sparkles size={14} className="mr-2" />}
@@ -483,9 +591,24 @@ export default function Home() {
 
         </div>
       </div>
-      
+
+      {/* AI Explanation — Console-style Output Panel */}
+      {aiExplanation && (targetView === "ai" || targetView === "diff") && (
+        <div className="px-6 -mt-2 mb-4 max-w-[1700px] mx-auto w-full z-10 relative">
+          <div className="border border-slate-200 dark:border-white/10 bg-white dark:bg-zinc-900 rounded-xl overflow-hidden shadow-sm">
+            <div className="h-8 flex items-center px-4 bg-slate-100 dark:bg-zinc-800/80 border-b border-slate-200 dark:border-white/5">
+              <div className="flex items-center gap-2 text-slate-500 dark:text-zinc-400 text-[11px] font-semibold tracking-wide">
+                <Sparkles className="w-3 h-3" />
+                CHANGE SUMMARY
+              </div>
+            </div>
+            <div className="p-4 text-[13px] text-slate-600 dark:text-zinc-400 leading-relaxed whitespace-pre-wrap font-mono">{aiExplanation}</div>
+          </div>
+        </div>
+      )}
+
       {/* Footer / Status Bar Area */}
-      <footer className="h-7 shrink-0 border-t border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-zinc-950 flex items-center px-6 justify-between text-[11px] text-slate-500 dark:text-zinc-500 font-mono z-20 relative transition-colors">
+      <footer className="h-7 shrink-0 sticky bottom-0 border-t border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-zinc-950 flex items-center px-6 justify-between text-[11px] text-slate-500 dark:text-zinc-500 font-mono z-20 transition-colors">
         <div className="flex items-center gap-5">
           <span className="flex items-center gap-2 group cursor-pointer hover:text-slate-700 dark:hover:text-zinc-300 transition-colors">
             <span className="relative flex h-2 w-2">
@@ -494,13 +617,19 @@ export default function Home() {
             </span>
             Transpiler Online
           </span>
-          <span className="flex items-center gap-1.5"><Sparkles size={11} className="text-indigo-500 dark:text-indigo-500/70" /> DeepSeek-R1 Ready</span>
+          <span className="flex items-center gap-1.5 opacity-80 cursor-default">
+            Powered by <a href="https://github.com/tobymao/sqlglot" target="_blank" rel="noopener noreferrer" className="font-semibold text-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 underline decoration-indigo-500/30 underline-offset-2 transition-colors">SQLGlot</a> & <a href="https://groq.com" target="_blank" rel="noopener noreferrer" className="font-semibold text-orange-500 hover:text-orange-600 dark:hover:text-orange-400 underline decoration-orange-500/30 underline-offset-2 transition-colors">Groq</a>
+          </span>
         </div>
-        <div className="flex items-center gap-4 hover:text-slate-700 dark:hover:text-zinc-300 cursor-pointer transition-colors">
-          <Settings2 size={13} /> Preferences
+        <div className="flex items-center gap-4 text-[11px] font-semibold tracking-wider">
+          <a href="https://github.com/ankit-mego" target="_blank" rel="noopener noreferrer" className="hover:text-slate-900 dark:hover:text-white transition-colors">
+            GITHUB
+          </a>
+          <a href="https://www.linkedin.com/in/ankitkm07/" target="_blank" rel="noopener noreferrer" className="hover:text-slate-900 dark:hover:text-white transition-colors">
+            LINKEDIN
+          </a>
         </div>
       </footer>
-
     </div>
   );
 }
