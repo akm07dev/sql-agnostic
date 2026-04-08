@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { signIn, signUp } from "./actions";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,7 @@ import { createClient } from "@/utils/supabase/client";
 import { Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 
-export default function LoginPage() {
+function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const searchParams = useSearchParams();
@@ -26,7 +26,6 @@ export default function LoginPage() {
         redirectTo: `${location.origin}/auth/callback`,
       },
     });
-    // Ensure loading drops if network rejects before redirect
     if (error) {
       alert("Google SSO Failed. Please ensure Google is enabled in your Supabase Auth Providers Settings.");
       setLoading(false);
@@ -40,10 +39,8 @@ export default function LoginPage() {
       
       <div className="flex flex-col w-[90%] sm:max-w-md gap-2 mx-auto z-10 bg-white/70 dark:bg-zinc-950/60 backdrop-blur-xl border border-slate-200 dark:border-white/5 rounded-3xl py-10 px-8 sm:px-12 shadow-2xl transition-colors relative overflow-hidden">
         
-        {/* Subtle inner highlight */}
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/50 dark:via-white/10 to-transparent"></div>
 
-        {/* Back link */}
         <Link
           href="/"
           className="text-sm text-slate-500 dark:text-zinc-500 hover:text-slate-800 dark:hover:text-zinc-300 transition-colors mb-4 flex items-center gap-1 font-medium"
@@ -51,7 +48,6 @@ export default function LoginPage() {
           ← Back to translator
         </Link>
 
-        {/* Visual Mode Tabs */}
         <div className="flex gap-2 w-full p-1 bg-slate-200 dark:bg-black/30 rounded-lg mb-6 shadow-inner">
           <button
             onClick={() => setMode("signin")}
@@ -69,7 +65,6 @@ export default function LoginPage() {
           </button>
         </div>
 
-        {/* Status message */}
         {message && (
           <div
             className={`flex items-center gap-2 rounded-xl px-4 py-3 text-sm mb-4 ${
@@ -87,7 +82,6 @@ export default function LoginPage() {
           </div>
         )}
 
-        {/* Google SSO — Primary */}
         <Button
           variant="outline"
           type="button"
@@ -108,7 +102,6 @@ export default function LoginPage() {
           Continue with Google
         </Button>
 
-        {/* Divider */}
         <div className="relative mb-4 mt-2">
           <div className="absolute inset-0 flex items-center">
             <span className="w-full border-t border-slate-200 dark:border-white/10" />
@@ -120,7 +113,6 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Email / Password Form */}
         <form action={mode === "signin" ? signIn : signUp} className="flex flex-col w-full gap-4 text-slate-800 dark:text-zinc-300">
           <div>
             <Label htmlFor="email" className="sr-only">Email</Label>
@@ -168,5 +160,17 @@ export default function LoginPage() {
 
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="animate-spin text-indigo-500" />
+      </div>
+    }>
+      <LoginForm />
+    </Suspense>
   );
 }
