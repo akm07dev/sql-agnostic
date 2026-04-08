@@ -206,6 +206,12 @@ class RefineRequest(BaseModel):
 # Endpoints
 # ---------------------------------------------------------------------------
 
+@app.get("/api/health")
+def health_check():
+    """Lightweight endpoint for Vercel 'Keep-Warm' crons."""
+    return {"status": "ok", "message": "Serverless function is warm"}
+
+
 @app.post("/api/translate", response_model=TranspileResponse)
 @limiter.limit("20/minute", key_func=_translate_key)
 def translate_sql(request: Request, req: TranspileRequest):

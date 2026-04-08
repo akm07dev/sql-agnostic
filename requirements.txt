@@ -6,3 +6,4 @@ groq
 PyJWT[crypto]
 slowapi
 python-dotenv
+cryptography

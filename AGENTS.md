@@ -35,7 +35,7 @@ All mutating endpoints require `X-Requested-With: XMLHttpRequest` header. Browse
 
 - `src/proxy.ts` — This is **not** custom middleware. It's Next.js 16's renamed `middleware.ts` (the export is `proxy` instead of `middleware`).
 - `src/app/login/actions.ts` — Server actions for auth (signUp, signIn, signOut, resetPassword, updatePassword)
-- `backend/main.py` — Single FastAPI file containing all endpoints, auth, rate limiting, and AI logic
+- `api/index.py` — Single FastAPI file containing all endpoints, auth, rate limiting, and AI logic
 
 ## Environment Variables
 
@@ -45,7 +45,7 @@ NEXT_PUBLIC_SUPABASE_URL
 NEXT_PUBLIC_SUPABASE_ANON_KEY
 ```
 
-### `backend/.env` (FastAPI)
+### `api/.env` (FastAPI)
 ```
 SUPABASE_URL
 GROQ_API_KEY
@@ -54,7 +54,7 @@ GROQ_API_KEY
 ## Common Tasks
 
 ### Adding a new API endpoint
-1. Add the endpoint in `backend/main.py`
+1. Add the endpoint in `api/index.py`
 2. It's automatically proxied via the `/api/*` rewrite in `next.config.ts`
 3. If it requires auth, use `Depends(verify_jwt_cookie)`
 4. If it requires CSRF, add `Depends(verify_csrf)`
