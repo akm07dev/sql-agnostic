@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Editor from "@monaco-editor/react";
+import { Editor, DiffEditor } from "@monaco-editor/react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -15,6 +15,8 @@ import { useTheme } from "next-themes";
 export default function Home() {
   const [sourceCode, setSourceCode] = useState("-- Enter your SQL here\nSELECT * FROM users;");
   const [targetCode, setTargetCode] = useState("");
+  const [aiRefinedCode, setAiRefinedCode] = useState("");
+  const [targetView, setTargetView] = useState<"sqlglot" | "ai" | "diff">("sqlglot");
   const [sourceDialect, setSourceDialect] = useState<SqlDialect>("postgres");
   const [targetDialect, setTargetDialect] = useState<SqlDialect>("mysql");
   const [isTranspiling, setIsTranspiling] = useState(false);
@@ -51,6 +53,11 @@ export default function Home() {
 
 
   const handleTranspile = async () => {
+    if (sourceCode.length > 100000) {
+      setTargetCode("-- Error: Source SQL exceeds the generous 100,000 character limit for SQLGlot parser.");
+      return;
+    }
+
     setIsTranspiling(true);
     try {
       const res = await fetch("/api/translate", {
@@ -75,12 +82,18 @@ export default function Home() {
       const data = await res.json();
       if (data.error) {
         setTargetCode(`-- Parsing Error:\n-- ${data.error}`);
+        setAiRefinedCode("");
+        setTargetView("sqlglot");
       } else {
         setTargetCode(data.transpiled_sql);
+        setAiRefinedCode("");
+        setTargetView("sqlglot");
         setShowRefinement(false);
       }
     } catch (err) {
       setTargetCode("-- Fetch Error");
+      setAiRefinedCode("");
+      setTargetView("sqlglot");
     } finally {
       setIsTranspiling(false);
     }
@@ -89,6 +102,11 @@ export default function Home() {
   const handleRefine = async () => {
     if (!user) {
       window.location.href = "/login";
+      return;
+    }
+
+    if (sourceCode.length > 10000) {
+      alert("Source SQL code exceeds the 10,000 character limit for AI context processing.");
       return;
     }
 
@@ -103,6 +121,7 @@ export default function Home() {
         body: JSON.stringify({
           source_dialect: sourceDialect,
           target_dialect: targetDialect,
+          sourceSql: sourceCode,
           sqlGlotOutput: targetCode,
           userInstructions: instructions,
         }),
@@ -119,7 +138,8 @@ export default function Home() {
       const res = await apiRes.json();
 
       if (res.success && res.sql) {
-        setTargetCode(`-- [Refined with AI]\n${res.sql}`);
+        setAiRefinedCode(res.sql);
+        setTargetView("ai");
         setShowRefinement(false);
         setInstructions("");
       } else {
@@ -331,6 +351,14 @@ export default function Home() {
                 </SelectContent>
               </Select>
               {isTranspiling && <Loader2 className="animate-spin w-3.5 h-3.5 text-slate-400 dark:text-zinc-500 ml-2" />}
+
+              {aiRefinedCode && (
+                <div className="flex ml-2 md:ml-4 gap-0.5 p-0.5 bg-slate-200/70 dark:bg-black/40 rounded-md border border-slate-300/50 dark:border-white/5">
+                  <button onClick={() => setTargetView('sqlglot')} className={`px-2.5 py-1 text-[11px] font-semibold rounded-sm transition-all ${targetView === 'sqlglot' ? 'bg-white dark:bg-zinc-800 shadow-sm text-slate-800 dark:text-zinc-200' : 'text-slate-500 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-zinc-300'}`}>Transpiler</button>
+                  <button onClick={() => setTargetView('ai')} className={`px-2.5 py-1 text-[11px] font-semibold rounded-sm transition-all ${targetView === 'ai' ? 'bg-white dark:bg-zinc-800 shadow-sm text-slate-800 dark:text-zinc-200' : 'text-slate-500 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-zinc-300'}`}>AI Refined</button>
+                  <button onClick={() => setTargetView('diff')} className={`px-2.5 py-1 text-[11px] font-semibold rounded-sm transition-all ${targetView === 'diff' ? 'bg-white dark:bg-zinc-800 shadow-sm text-slate-800 dark:text-zinc-200' : 'text-slate-500 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-zinc-300'}`}>Diff</button>
+                </div>
+              )}
             </div>
 
             {/* Target Actions */}
@@ -366,28 +394,50 @@ export default function Home() {
 
            {/* Editor Container */}
           <div className="flex-1 relative overflow-hidden bg-slate-50/50 dark:bg-black/20">
-            <div className="absolute top-3 right-5 z-10 opacity-30 text-[10px] font-mono text-slate-400 dark:text-zinc-500 pointer-events-none select-none tracking-widest">OUTPUT</div>
-            <Editor
-              height="100%"
-              language="sql"
-              theme={isDark ? "vs-dark" : "vs-light"}
-              value={targetCode}
-              options={{ 
-                readOnly: true, 
-                minimap: { enabled: false }, 
-                fontSize: 13, 
-                fontFamily: "var(--font-geist-mono), monospace",
-                scrollBeyondLastLine: false,
-                lineHeight: 24,
-                padding: { top: 20 },
-                renderLineHighlight: "none",
-              }}
-            />
+            <div className="absolute top-3 right-5 z-10 opacity-30 text-[10px] font-mono text-slate-400 dark:text-zinc-500 pointer-events-none select-none tracking-widest">
+              {targetView === "diff" ? "AI DIFF" : targetView === "ai" ? "AI OUTPUT" : "TRANSPILER OUTPUT"}
+            </div>
+            {targetView === "diff" ? (
+              <DiffEditor
+                height="100%"
+                language="sql"
+                theme={isDark ? "vs-dark" : "vs-light"}
+                original={targetCode}
+                modified={aiRefinedCode}
+                options={{ 
+                  readOnly: true, 
+                  minimap: { enabled: false }, 
+                  fontSize: 13, 
+                  fontFamily: "var(--font-geist-mono), monospace",
+                  scrollBeyondLastLine: false,
+                  lineHeight: 24,
+                  padding: { top: 20 },
+                  renderLineHighlight: "none",
+                }}
+              />
+            ) : (
+              <Editor
+                height="100%"
+                language="sql"
+                theme={isDark ? "vs-dark" : "vs-light"}
+                value={targetView === "ai" ? aiRefinedCode : targetCode}
+                options={{ 
+                  readOnly: true, 
+                  minimap: { enabled: false }, 
+                  fontSize: 13, 
+                  fontFamily: "var(--font-geist-mono), monospace",
+                  scrollBeyondLastLine: false,
+                  lineHeight: 24,
+                  padding: { top: 20 },
+                  renderLineHighlight: "none",
+                }}
+              />
+            )}
           </div>
 
           {/* AI Refinement Integrated Panel */}
           {showRefinement && (
-            <div className="absolute bottom-0 left-0 right-0 border-t border-slate-300 dark:border-white/10 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-xl shadow-[0_-20px_40px_rgba(0,0,0,0.1)] dark:shadow-[0_-20px_40px_rgba(0,0,0,0.5)] z-20 animate-in slide-in-from-bottom flex flex-col transition-colors">
+            <div className="absolute top-12 right-4 w-[350px] md:w-[450px] border border-slate-300 dark:border-white/10 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl shadow-2xl rounded-xl z-50 animate-in slide-in-from-top-2 flex flex-col transition-colors overflow-hidden">
               <div className="flex items-center justify-between px-5 py-3 border-b border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-white/[0.02]">
                 <div className="flex items-center gap-2.5 text-indigo-600 dark:text-indigo-400">
                   <div className="p-1 rounded bg-indigo-100 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20">
@@ -399,26 +449,33 @@ export default function Home() {
                   <Minimize2 size={13} />
                 </Button>
               </div>
-              <div className="p-5 flex gap-4">
-                <Textarea 
-                  placeholder="e.g. Highlight uppercase logic, strictly quote all columns, or map to explicit date functions..." 
-                  className="flex-1 resize-none bg-white dark:bg-black/50 border-slate-300 dark:border-white/10 focus-visible:ring-1 focus-visible:ring-indigo-500 text-sm min-h-[70px] placeholder:text-slate-400 dark:placeholder:text-zinc-600 rounded-lg shadow-inner text-slate-800 dark:text-zinc-300"
-                  value={instructions}
-                  onChange={(e) => setInstructions(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      handleRefine();
-                    }
-                  }}
-                  autoFocus
-                />
+              <div className="p-4 flex flex-col gap-3">
+                <div className="relative flex-1">
+                  <Textarea 
+                    placeholder="Optional: e.g. Highlight uppercase logic, strictly quote all columns, or map to explicit date functions..." 
+                    className="w-full resize-none bg-white dark:bg-black/50 border-slate-300 dark:border-white/10 focus-visible:ring-1 focus-visible:ring-indigo-500 text-sm min-h-[90px] placeholder:text-slate-400 dark:placeholder:text-zinc-600 rounded-lg shadow-inner text-slate-800 dark:text-zinc-300 pb-6"
+                    value={instructions}
+                    onChange={(e) => setInstructions(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        if (!isRefining) handleRefine();
+                      }
+                    }}
+                    maxLength={150}
+                    autoFocus
+                  />
+                  <div className="absolute bottom-2 right-3 text-[10px] font-medium text-slate-400 dark:text-zinc-600 pointer-events-none select-none">
+                    {instructions.length} / 150
+                  </div>
+                </div>
                 <Button 
                   onClick={handleRefine} 
-                  disabled={isRefining || !instructions.trim()} 
-                  className="bg-slate-900 dark:bg-zinc-100 hover:bg-slate-800 dark:hover:bg-white text-white dark:text-zinc-900 shrink-0 h-auto py-2 px-6 rounded-lg font-semibold shadow-xl transition-all duration-300 disabled:opacity-50"
+                  disabled={isRefining} 
+                  className="bg-slate-900 dark:bg-zinc-100 hover:bg-slate-800 dark:hover:bg-white text-white dark:text-zinc-900 w-full h-10 rounded-lg font-semibold shadow-md transition-all duration-300 disabled:opacity-50"
                 >
-                  {isRefining ? <Loader2 className="animate-spin h-4 w-4" /> : "Run Refinement"}
+                  {isRefining ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <Sparkles size={14} className="mr-2" />}
+                  {isRefining ? "Refining..." : "Refine"}
                 </Button>
               </div>
             </div>

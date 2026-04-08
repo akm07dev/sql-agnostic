@@ -198,6 +198,7 @@ class RefineRequest(BaseModel):
     source_dialect: str
     target_dialect: str
     sqlGlotOutput: str
+    sourceSql: str | None = None
     userInstructions: str | None = None
 
 
@@ -239,38 +240,95 @@ def refine_sql(
 ):
     try:
         user_instructions = req.userInstructions.strip() if req.userInstructions else ""
+        source_hint = f"Original Source SQL:\n{req.sourceSql}\n\n" if req.sourceSql else ""
+        
+        base_context = (
+            f"The user wants to convert {req.source_dialect} to {req.target_dialect}. "
+            f"{source_hint}"
+            f"SQLGlot initially produced this translation:\n{req.sqlGlotOutput}\n\n"
+        )
+        
         if user_instructions:
             prompt = (
-                f"The user wants to convert {req.source_dialect} to {req.target_dialect}. "
-                f"SQLGlot produced this: {req.sqlGlotOutput}. "
+                base_context + 
                 f"The user is not satisfied and provided these specific instructions: {user_instructions}. "
                 f"Please provide the corrected SQL only."
             )
         else:
             prompt = (
-                f"The user wants to convert {req.source_dialect} to {req.target_dialect}. "
-                f"SQLGlot produced this: {req.sqlGlotOutput}. "
-                f"The user is not satisfied. Please review the SQLGlot output and provide a corrected, "
-                f"improved SQL query. Return ONLY the finalized, corrected SQL query block."
+                base_context + 
+                f"The user is not satisfied. Please review the SQLGlot output. Identify any semantic divergence from the original source logic and fix it. "
+                f"Return ONLY the finalized, corrected SQL query block."
             )
 
-        chat_completion = groq_client.chat.completions.create(
-            messages=[
-                {
-                    "role": "system",
-                    "content": (
-                        "You are an expert SQL translation agent. "
-                        "Respond with ONLY the finalized, corrected SQL query block. "
-                        "Do not include markdown formatting or explanations."
-                    ),
-                },
-                {"role": "user", "content": prompt},
-            ],
-            model="qwen-2.5-coder-32b",
-            temperature=0.1,
-        )
+        models_to_try = [
+            "llama-3.3-70b-versatile",
+            "openai/gpt-oss-120b",
+            "qwen/qwen3-32b",
+            "llama-3.1-8b-instant",
+            "openai/gpt-oss-20b"
+        ]
+        
+        chat_completion = None
+        last_error = None
+        
+        for target_model in models_to_try:
+            try:
+                chat_completion = groq_client.chat.completions.create(
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": (
+                                "You are an expert SQL translation agent executing a raw pipeline. "
+                                "You MUST return the raw SQL query and absolutely nothing else. "
+                                "CRITICAL: Always preserve and map the user's original SQL comments in your final output. "
+                                "CRITICAL: If you make a highly complex logical shift (e.g. replacing a function not supported by the target dialect), add brief, helpful inline SQL comments (`--`) explaining why. "
+                                "CRITICAL: DO NOT wrap your response in markdown backticks (```). "
+                                "CRITICAL: DO NOT include any conversational text or explanations outside of SQL comments. "
+                                "If you include anything other than raw SQL code, the CI/CD pipeline will fail."
+                            ),
+                        },
+                        {"role": "user", "content": prompt},
+                    ],
+                    model=target_model,
+                    temperature=0.1,
+                )
+                break  # Successful request, drop out of fallback loop
+            except Exception as e:
+                last_error = e
+                # If error is a rate limit, immediately escalate instead of hammering the API
+                error_msg = str(e).lower()
+                if "rate limit" in error_msg or "429" in error_msg:
+                    raise e
+                continue
+                
+        if not chat_completion:
+            raise Exception(f"All model fallbacks failed. Groq may be experiencing an outage. Last error: {last_error}")
 
         refined_sql = chat_completion.choices[0].message.content or ""
-        return {"success": True, "sql": refined_sql.strip()}
+        refined_sql = refined_sql.strip()
+        
+        # Strip markdown syntax if the model ignores the system prompt
+        if refined_sql.startswith("```"):
+            lines = refined_sql.split("\n")
+            if lines[0].startswith("```"):
+                lines = lines[1:]
+            if lines and lines[-1].startswith("```"):
+                lines = lines[:-1]
+            refined_sql = "\n".join(lines).strip()
+
+        # Force structural formatting parity with SQLGlot so the Diff Viewer isolates logic changes, not whitespace changes
+        try:
+            formatted_sql = sqlglot.transpile(
+                refined_sql,
+                read=req.target_dialect.lower(),
+                write=req.target_dialect.lower(),
+                pretty=True
+            )
+            refined_sql = ";\n".join(formatted_sql)
+        except Exception:
+            pass # Fall back to raw AI output if SQLGlot refuses to parse the AI's structure
+
+        return {"success": True, "sql": refined_sql}
     except Exception as e:
         return {"success": False, "error": str(e)}
