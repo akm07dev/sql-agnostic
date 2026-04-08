@@ -378,10 +378,10 @@ export default function Home() {
       </div>
 
       {/* Main Dual-Pane Environment */}
-      <div className="flex-1 flex flex-col lg:flex-row p-6 pt-4 gap-6 relative z-10 max-w-[1700px] mx-auto w-full">
+      <div className="flex flex-col lg:flex-row p-6 pt-4 gap-6 relative z-10 max-w-[1700px] mx-auto w-full">
 
         {/* SOURCE PANE */}
-        <div className="flex-1 flex flex-col min-w-0 h-[70vh] bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl shadow-black/5 dark:shadow-black/40 overflow-hidden group">
+        <div className="flex-1 flex flex-col min-w-0 min-h-[85vh] bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl shadow-black/5 dark:shadow-black/40 overflow-hidden group">
           {/* Pane Toolbar */}
           <div className="h-12 flex items-center px-4 border-b border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-zinc-900/50 shrink-0 justify-between">
             <div className="flex items-center gap-2">
@@ -510,7 +510,7 @@ export default function Home() {
         </div>
 
         {/* TARGET PANE */}
-        <div className="flex-1 flex flex-col min-w-0 h-[70vh] bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl shadow-black/5 dark:shadow-black/40 overflow-hidden relative group">
+        <div className="flex-1 flex flex-col min-w-0 min-h-[85vh] bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl shadow-black/5 dark:shadow-black/40 overflow-hidden relative group">
           {/* Pane Toolbar */}
           <div className="h-12 flex items-center px-4 border-b border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-zinc-900/50 shrink-0 justify-between">
             <div className="flex items-center gap-2">
@@ -607,7 +607,7 @@ export default function Home() {
 
       {/* AI Explanation — Console-style Output Panel */}
       {aiExplanation && (targetView === "ai" || targetView === "diff") && (
-        <div className="px-6 -mt-2 mb-4 max-w-[1700px] mx-auto w-full z-10 relative">
+        <div className="px-6 -mt-2 mb-10 max-w-[1700px] mx-auto w-full z-10 relative">
           <div className="border border-slate-200 dark:border-white/10 bg-white dark:bg-zinc-900 rounded-xl overflow-hidden shadow-sm">
             <div className="h-8 flex items-center px-4 bg-slate-100 dark:bg-zinc-800/80 border-b border-slate-200 dark:border-white/5">
               <div className="flex items-center gap-2 text-slate-500 dark:text-zinc-400 text-[11px] font-semibold tracking-wide">
@@ -621,7 +621,7 @@ export default function Home() {
       )}
 
       {/* Footer / Status Bar Area */}
-      <footer className="h-7 shrink-0 sticky bottom-0 border-t border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-zinc-950 flex items-center px-6 justify-between text-[11px] text-slate-500 dark:text-zinc-500 font-mono z-20 transition-colors">
+      <footer className="h-7 shrink-0 border-t border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-zinc-950 flex items-center px-6 justify-between text-[11px] text-slate-500 dark:text-zinc-500 font-mono z-20 transition-colors">
         <div className="flex items-center gap-5">
           <span className="flex items-center gap-2 group cursor-pointer hover:text-slate-700 dark:hover:text-zinc-300 transition-colors">
             <span className="relative flex h-2 w-2">
