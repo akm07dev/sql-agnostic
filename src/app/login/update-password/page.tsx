@@ -1,14 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { updatePassword } from "../actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { AlertCircle, CheckCircle2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 
-export default function UpdatePasswordPage() {
+function UpdatePasswordForm() {
   const [loading, setLoading] = useState(false);
   const searchParams = useSearchParams();
   const message = searchParams.get("message");
@@ -21,7 +21,6 @@ export default function UpdatePasswordPage() {
       
       <div className="flex flex-col w-[90%] sm:max-w-md gap-2 mx-auto z-10 bg-white/70 dark:bg-zinc-950/60 backdrop-blur-xl border border-slate-200 dark:border-white/5 rounded-3xl py-10 px-8 sm:px-12 shadow-2xl transition-colors relative overflow-hidden">
         
-        {/* Subtle inner highlight */}
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/50 dark:via-white/10 to-transparent"></div>
 
         <div className="flex flex-col mb-6 text-left">
@@ -76,5 +75,17 @@ export default function UpdatePasswordPage() {
 
       </div>
     </div>
+  );
+}
+
+export default function UpdatePasswordPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="animate-spin text-indigo-500" />
+      </div>
+    }>
+      <UpdatePasswordForm />
+    </Suspense>
   );
 }

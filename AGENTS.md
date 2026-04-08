@@ -31,6 +31,9 @@ FastAPI independently verifies Supabase JWTs using RS256 asymmetric verification
 ### CSRF Protection
 All mutating endpoints require `X-Requested-With: XMLHttpRequest` header. Browsers enforce CORS preflight on custom headers, blocking cross-origin form attacks.
 
+### Suspense Boundary Requirement
+Next.js App Router requires `useSearchParams()` to be wrapped in a `<Suspense>` boundary. If a Client Component uses this hook, it must be isolated into an inner component and wrapped within the page-level export to avoid build-time deoptimization (CSR bailout).
+
 ## File Conventions
 
 - `src/proxy.ts` — This is **not** custom middleware. It's Next.js 16's renamed `middleware.ts` (the export is `proxy` instead of `middleware`).
