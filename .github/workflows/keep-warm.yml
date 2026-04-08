@@ -11,4 +11,4 @@ jobs:
       - name: Ping Health Endpoint
         run: |
           # Replace the URL below with your actual Vercel Production URL after deployment
-          curl -s -f https://sql_agnostic.vercel.app/api/health || echo "Ping failed, check URL"
+          curl -s -f https://sql-agnostic.vercel.app/api/health || echo "Ping failed, check URL"
