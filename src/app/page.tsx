@@ -25,6 +25,7 @@ export default function Home() {
   const [instructions, setInstructions] = useState("");
   const [isRefining, setIsRefining] = useState(false);
   const [aiExplanation, setAiExplanation] = useState("");
+  const [lastRefineKey, setLastRefineKey] = useState("");
 
   const [sourceCopied, setSourceCopied] = useState(false);
   const [targetCopied, setTargetCopied] = useState(false);
@@ -140,6 +141,12 @@ export default function Home() {
       return;
     }
 
+    const refineKey = `${sourceCode}|${sourceDialect}|${targetDialect}|${instructions}`;
+    if (refineKey === lastRefineKey) {
+      return;
+    }
+
+    setShowRefinement(false);
     setIsRefining(true);
     try {
       const apiRes = await fetch("/api/refine", {
@@ -173,6 +180,7 @@ export default function Home() {
         setTargetView("ai");
         setShowRefinement(false);
         setInstructions("");
+        setLastRefineKey(refineKey);
       } else {
         alert("Failed to refine: " + res.error);
       }
@@ -254,7 +262,7 @@ export default function Home() {
   );
 
   return (
-    <div className="flex flex-col min-h-screen w-full bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-300 font-sans overflow-auto relative selection:bg-indigo-200 dark:selection:bg-indigo-500/30 transition-colors duration-500">
+    <div className="flex flex-col min-h-screen w-full bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-300 font-sans relative selection:bg-indigo-200 dark:selection:bg-indigo-500/30 transition-colors duration-500">
 
       {/* Subtle background glow */}
       <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-500/10 dark:bg-indigo-900/10 blur-[120px] pointer-events-none" />
@@ -438,17 +446,67 @@ export default function Home() {
             {isTranspiling ? <Loader2 className="animate-spin w-6 h-6" /> : <ChevronRight className="w-8 h-8 ml-0.5" />}
           </Button>
 
-          <Button
-            variant="outline"
-            className="w-12 h-12 rounded-full bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 text-indigo-600 dark:text-indigo-400 border border-slate-200 dark:border-white/10 shadow-lg hover:shadow-xl transition-all duration-300 p-0"
-            onClick={() => {
-              if (!user) return window.location.href = "/login";
-              setShowRefinement(!showRefinement);
-            }}
-            title="AI Refine"
-          >
-            <Sparkles className="w-5 h-5" />
-          </Button>
+          <div className="relative">
+            <Button
+              variant="outline"
+              className="w-12 h-12 rounded-full bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 text-indigo-600 dark:text-indigo-400 border border-slate-200 dark:border-white/10 shadow-lg hover:shadow-xl transition-all duration-300 p-0"
+              onClick={() => {
+                if (!user) return window.location.href = "/login";
+                if (showRefinement) {
+                  if (!isRefining) handleRefine();
+                } else {
+                  setShowRefinement(true);
+                }
+              }}
+              onDoubleClick={() => {
+                if (!user) return window.location.href = "/login";
+                if (!isRefining) {
+                  setInstructions("");
+                  handleRefine();
+                }
+              }}
+              title="AI Refine — double click to skip instructions"
+            >
+              {isRefining ? <Loader2 className="animate-spin w-5 h-5" /> : <Sparkles className="w-5 h-5" />}
+            </Button>
+
+            {/* AI Refinement Popup */}
+            {showRefinement && (
+              <div className="absolute left-1/2 -translate-x-1/2 top-16 w-[300px] border border-slate-300 dark:border-white/10 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl shadow-2xl rounded-xl z-50 animate-in slide-in-from-top-2 flex flex-col transition-colors overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-white/[0.02]">
+                  <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
+                    <Sparkles size={11} />
+                    <span className="text-[11px] font-semibold tracking-wide">Refinement Instructions</span>
+                  </div>
+                  <Button variant="ghost" size="icon" className="h-5 w-5 text-slate-500 dark:text-zinc-500 hover:text-slate-800 dark:hover:text-white rounded-md transition-colors" onClick={() => setShowRefinement(false)}>
+                    <Minimize2 size={11} />
+                  </Button>
+                </div>
+                <div className="p-3 flex flex-col gap-2">
+                  <div className="relative">
+                    <Textarea
+                      placeholder="e.g. Use explicit JOINs, quote all columns..."
+                      className="w-full resize-none bg-white dark:bg-black/50 border-slate-300 dark:border-white/10 focus-visible:ring-1 focus-visible:ring-indigo-500 text-sm min-h-[60px] placeholder:text-slate-400 dark:placeholder:text-zinc-600 rounded-lg shadow-inner text-slate-800 dark:text-zinc-300 pb-5"
+                      value={instructions}
+                      onChange={(e) => setInstructions(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          if (!isRefining) handleRefine();
+                        }
+                      }}
+                      maxLength={150}
+                      autoFocus
+                    />
+                    <div className="absolute bottom-1.5 right-2.5 text-[9px] font-medium text-slate-400 dark:text-zinc-600 pointer-events-none select-none">
+                      {instructions.length}/150
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-slate-400 dark:text-zinc-600 text-center">Enter to submit · double-click ✨ to skip</p>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* TARGET PANE */}
@@ -543,51 +601,6 @@ export default function Home() {
             )}
           </div>
 
-          {/* AI Refinement Integrated Panel */}
-          {showRefinement && (
-            <div className="absolute top-12 right-4 w-[350px] md:w-[450px] border border-slate-300 dark:border-white/10 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl shadow-2xl rounded-xl z-50 animate-in slide-in-from-top-2 flex flex-col transition-colors overflow-hidden">
-              <div className="flex items-center justify-between px-5 py-3 border-b border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-white/[0.02]">
-                <div className="flex items-center gap-2.5 text-indigo-600 dark:text-indigo-400">
-                  <div className="p-1 rounded bg-indigo-100 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/20">
-                    <Sparkles size={12} />
-                  </div>
-                  <span className="text-xs font-semibold tracking-wide">AI Refinement Instructions</span>
-                </div>
-                <Button variant="ghost" size="icon" className="h-6 w-6 text-slate-500 dark:text-zinc-500 hover:text-slate-800 dark:hover:text-white rounded-md bg-slate-200/50 dark:bg-white/5 hover:bg-slate-300 dark:hover:bg-white/10 transition-colors" onClick={() => setShowRefinement(false)}>
-                  <Minimize2 size={13} />
-                </Button>
-              </div>
-              <div className="p-4 flex flex-col gap-3">
-                <div className="relative flex-1">
-                  <Textarea
-                    placeholder="Optional: e.g. Highlight uppercase logic, strictly quote all columns, or map to explicit date functions..."
-                    className="w-full resize-none bg-white dark:bg-black/50 border-slate-300 dark:border-white/10 focus-visible:ring-1 focus-visible:ring-indigo-500 text-sm min-h-[90px] placeholder:text-slate-400 dark:placeholder:text-zinc-600 rounded-lg shadow-inner text-slate-800 dark:text-zinc-300 pb-6"
-                    value={instructions}
-                    onChange={(e) => setInstructions(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && !e.shiftKey) {
-                        e.preventDefault();
-                        if (!isRefining) handleRefine();
-                      }
-                    }}
-                    maxLength={150}
-                    autoFocus
-                  />
-                  <div className="absolute bottom-2 right-3 text-[10px] font-medium text-slate-400 dark:text-zinc-600 pointer-events-none select-none">
-                    {instructions.length} / 150
-                  </div>
-                </div>
-                <Button
-                  onClick={handleRefine}
-                  disabled={isRefining}
-                  className="bg-slate-900 dark:bg-zinc-100 hover:bg-slate-800 dark:hover:bg-white text-white dark:text-zinc-900 w-full h-10 rounded-lg font-semibold shadow-md transition-all duration-300 disabled:opacity-50"
-                >
-                  {isRefining ? <Loader2 className="animate-spin h-4 w-4 mr-2" /> : <Sparkles size={14} className="mr-2" />}
-                  {isRefining ? "Refining..." : "Refine"}
-                </Button>
-              </div>
-            </div>
-          )}
 
         </div>
       </div>
