@@ -1,98 +1,103 @@
-# SQLAgnostic 🚀
+﻿# SQLAgnostic
 
-[![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)](https://nextjs.org/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-Python-009688?logo=fastapi)](https://fastapi.tiangolo.com/)
-[![Groq](https://img.shields.io/badge/AI-Groq%20Llama%203-orange)](https://groq.com/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+SQLAgnostic is a web IDE for cross-dialect SQL migration.
+It combines deterministic SQL transpilation (SQLGlot) with optional AI refinement (Groq) to help developers move queries between engines with higher confidence.
 
-**SQLAgnostic** is a high-performance, AI-augmented SQL IDE designed to solve the complexity of database migration and multi-dialect development. It leverages deterministic transpilation mixed with LLM-powered refinement to provide "lossless" SQL conversion across 20+ database architectures.
+## Highlights
 
-![Logo](https://raw.githubusercontent.com/ankit-mego/sql-agnostic/main/public/logo-preview.png) *(Placeholder for your logo)*
+- Deterministic SQL transpilation across popular dialects
+- Optional AI refinement with model fallback strategy
+- Monaco editor + diff view for transparent output review
+- Supabase cookie auth with backend JWT verification (JWKS)
+- Tiered rate limiting for guest vs authenticated usage
 
-## ✨ Features
+## Tech Stack
 
-- **Multi-Dialect Transpilation**: Convert SQL between Oracle, PostgreSQL, Snowflake, BigQuery, T-SQL, and 15+ more using SQLGlot.
-- **AI-Powered Refinement**: Uses Llama 3 (via Groq) to identify and fix semantic divergences that traditional transpilers miss (e.g., complex window functions, session-state variables).
-- **Pro-Grade Diff Viewer**: Side-by-side comparison with syntax highlighting to track exactly what the AI changed.
-- **Enterprise Security**: 
-  - Transactional JWT verification via Supabase RS256 JWKS.
-  - Multi-tiered rate limiting (Tiered for Anonymous vs. Authenticated).
-  - CSRF protection on all mutating endpoints.
-- **Premium UX**: Built with shadcn/ui, Tailwind CSS v4, and Monaco Editor.
+- Frontend: Next.js 16, React 19, TypeScript, Tailwind CSS v4, shadcn/ui
+- Backend: FastAPI (Python)
+- SQL Engine: SQLGlot
+- AI Provider: Groq
+- Auth: Supabase
+- Deployment target: Vercel
 
-## 🏗️ Architecture
+## Architecture
 
-```mermaid
-graph TD
-    User([User Browser]) -- Next.js / React --> FE[Frontend App Router]
-    FE -- JWT Cookies --> Proxy[(Auth Proxy)]
-    Proxy -- Verified Request --> API[FastAPI Backend]
-    API -- Analysis --> SQLGlot[SQLGlot Transpiler]
-    API -- Refinement --> Groq[Groq AI / Llama 3]
-    API -- Auth Check --> Supabase[Supabase JWKS]
+The project uses a Service-Hook-Component pattern on the frontend:
+
+1. Service layer: `src/services/sqlService.ts`
+2. Hooks layer: `src/hooks/useAuth.ts`, `src/hooks/useSql.ts`
+3. UI layer: `src/components/*` + `src/app/page.tsx`
+
+Backend logic is in `api/index.py`, with centralized `CONFIG` for limits and AI model fallback chains.
+
+## Project Structure
+
+```text
+api/
+  index.py                 # FastAPI endpoints, auth verification, rate limiting, AI pipeline
+src/
+  app/
+    page.tsx               # Main SQL workbench UI
+    layout.tsx             # Root app layout
+    robots.ts              # Robots metadata
+    sitemap.ts             # Sitemap metadata
+  components/
+    layout/                # Navbar and Footer
+  hooks/
+    useAuth.ts             # Supabase session hook
+    useSql.ts              # SQL translation/refinement session hook
+  services/
+    sqlService.ts          # API client singleton
+  lib/
+    constants.ts           # Frontend constants (limits, keys, links, endpoints)
+    dialects.ts            # Supported SQL dialect metadata
+  types/
+    sql.ts                 # API request/response types
 ```
 
-## 🛠️ Tech Stack
+## Security Model
 
-- **Frontend**: Next.js 15 (App Router), TypeScript, Tailwind CSS v4, shadcn/ui.
-- **Backend**: Python FastAPI.
-- **Core Engine**: SQLGlot.
-- **AI Intelligence**: Groq SDK (Llama 3.3 70B & 8B fallbacks).
-- **Database/Auth**: Supabase.
-- **Deployment**: Vercel (Next.js + Python Serverless Functions).
+- FastAPI verifies Supabase JWT cookies via JWKS (RS256 flow)
+- `/api/refine` requires authentication and CSRF header (`X-Requested-With`)
+- Rate limiting:
+  - `/api/translate`: 5/min guest, 20/min authenticated
+  - `/api/refine`: 5/min authenticated
 
-## 🚀 Getting Started
+## Local Development
 
 ### Prerequisites
 
 - Node.js 18+
 - Python 3.9+
-- Supabase Account
-- Groq API Key
 
-### Installation
+### Environment variables
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/ankit-mego/sql-agnostic.git
-   cd sql-agnostic
-   ```
+Create `.env.local` in the repository root:
 
-2. **Frontend Setup**
-   ```bash
-   npm install
-   ```
+```env
+NEXT_PUBLIC_SUPABASE_URL=...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+SUPABASE_URL=...
+GROQ_API_KEY=...
+```
 
-3. **Backend Setup**
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # venv\Scripts\activate on Windows
-   pip install -r requirements.txt
-   ```
+### Install and run
 
-4. **Environment Variables**
-   Create a `.env.local` (Next.js) and `api/.env` (Python):
-   ```env
-   NEXT_PUBLIC_SUPABASE_URL=your_url
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_key
-   GROQ_API_KEY=your_key
-   ```
+```bash
+npm install
+pip install -r requirements.txt
+npm run dev
+```
 
-5. **Run Locally**
-   ```bash
-   npm run dev
-   ```
+`npm run dev` starts both Next.js and FastAPI.
 
-## 🔒 Security
+## Why this project is portfolio-ready
 
-This project implements strict security patterns suitable for a production environment:
-- **JWT Handling**: Passwords and sessions are managed entirely by Supabase. The FastAPI backend never sees user passwords; it only verifies asymmetric RSA-256 signatures from Supabase's JWKS.
-- **Rate Limiting**: Integrated `slowapi` to prevent API abuse, with specialized limits for AI-heavy routes.
-- **CSRF**: Custom header validation for all POST requests to block cross-site attacks.
+- Clear separation of concerns (service vs hook vs component)
+- Centralized constants and typed API contracts
+- Defensive backend design (auth verification, CSRF, fallback models, throttling)
+- Practical developer UX (editor, copy/paste, diff, refinement workflow)
 
-## 📄 License
+## License
 
-Distributed under the MIT License. See `LICENSE` for more information.
-
----
-Built with ❤️ by [Ankit Megotia](https://github.com/ankit-mego)
+MIT

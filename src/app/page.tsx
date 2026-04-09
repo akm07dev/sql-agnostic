@@ -2,239 +2,33 @@
 
 import { useState, useEffect } from "react";
 import { Editor, DiffEditor } from "@monaco-editor/react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectGroup, SelectLabel, SelectSeparator } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeftRight, Sparkles, ThumbsDown, ThumbsUp, Loader2, ChevronRight, Minimize2, Copy, Check, ClipboardPaste } from "lucide-react";
 import { getCategorizedDialects, type SqlDialect } from "@/lib/dialects";
-import { createClient } from "@/utils/supabase/client";
-import type { User } from "@supabase/supabase-js";
 import { useTheme } from "next-themes";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { STORAGE_KEYS } from "@/lib/constants";
+import { useAuth } from "@/hooks/useAuth";
+import { useSql } from "@/hooks/useSql";
 
-export default function Home() {
-  const [sourceCode, setSourceCode] = useState("-- Enter your SQL here\nSELECT * FROM users;");
-  const [targetCode, setTargetCode] = useState("");
-  const [aiRefinedCode, setAiRefinedCode] = useState("");
-  const [targetView, setTargetView] = useState<"sqlglot" | "ai" | "diff">("sqlglot");
-  const [sourceDialect, setSourceDialect] = useState<SqlDialect>("postgres");
-  const [targetDialect, setTargetDialect] = useState<SqlDialect>("mysql");
-  const [isTranspiling, setIsTranspiling] = useState(false);
-  
-  const [showRefinement, setShowRefinement] = useState(false);
-  const [instructions, setInstructions] = useState("");
-  const [isRefining, setIsRefining] = useState(false);
-  const [aiExplanation, setAiExplanation] = useState("");
-  const [lastRefineKey, setLastRefineKey] = useState("");
+const DialectIcon = ({ icon, className = "w-4 h-4" }: { icon: string; className?: string }) => (
+  <span className="inline-flex items-center justify-center shrink-0 w-5 h-5 rounded bg-slate-100 dark:bg-zinc-800 p-0.5">
+    <Image src={icon} alt="" width={20} height={20} className={`${className} dark:invert opacity-80 object-contain`} />
+  </span>
+);
 
-  const [sourceCopied, setSourceCopied] = useState(false);
-  const [targetCopied, setTargetCopied] = useState(false);
-  const [sourcePasted, setSourcePasted] = useState(false);
-
-  const copyToClipboard = (text: string, setCopied: (v: boolean) => void) => {
-    navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const handlePaste = async () => {
-    try {
-      const text = await navigator.clipboard.readText();
-      if (text) {
-        setSourceCode(text);
-        setSourcePasted(true);
-        setTimeout(() => setSourcePasted(false), 2000);
-      }
-    } catch (err) {
-      console.error("Failed to read clipboard contents", err);
-    }
-  };
-
-  const [user, setUser] = useState<User | null>(null);
-  const [authLoading, setAuthLoading] = useState(true);
-
-  const { theme, systemTheme } = useTheme();
-  // Protect hydration errors
-  const [mounted, setMounted] = useState(false);
-
-  const supabase = createClient();
-  const { popular, other } = getCategorizedDialects();
-
-  useEffect(() => {
-    setMounted(true);
-    // Hydrate persistent user prefs safely completely exclusively on the client side
-    const savedSource = localStorage.getItem("sqlagnostic_source") as SqlDialect;
-    const savedTarget = localStorage.getItem("sqlagnostic_target") as SqlDialect;
-    if (savedSource) setSourceDialect(savedSource);
-    if (savedTarget) setTargetDialect(savedTarget);
-
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-      setAuthLoading(false);
-    };
-    getUser();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, [supabase.auth]);
-
-
-  const handleTranspile = async () => {
-    if (sourceCode.length > 100000) {
-      setTargetCode("-- Error: Source SQL exceeds the generous 100,000 character limit for SQLGlot parser.");
-      return;
-    }
-
-    setIsTranspiling(true);
-    try {
-      const res = await fetch("/api/translate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sql: sourceCode,
-          source_dialect: sourceDialect,
-          target_dialect: targetDialect
-        })
-      });
-
-      if (res.status === 429) {
-        setTargetCode(
-          user
-            ? "-- Rate limit exceeded (20/minute). Please wait a moment."
-            : "-- Rate limit exceeded (5/minute for guests).\n-- Sign in for higher limits!"
-        );
-        return;
-      }
-
-      const data = await res.json();
-      if (data.error) {
-        setTargetCode(`-- Parsing Error:\n-- ${data.error}`);
-        setAiRefinedCode("");
-        setTargetView("sqlglot");
-      } else {
-        setTargetCode(data.transpiled_sql);
-        setAiRefinedCode("");
-        setTargetView("sqlglot");
-        setShowRefinement(false);
-      }
-    } catch (err) {
-      setTargetCode("-- Fetch Error");
-      setAiRefinedCode("");
-      setTargetView("sqlglot");
-    } finally {
-      setIsTranspiling(false);
-    }
-  };
-
-  const handleRefine = async () => {
-    if (!user) {
-      window.location.href = "/login";
-      return;
-    }
-
-    if (sourceCode.length > 10000) {
-      alert("Source SQL code exceeds the 10,000 character limit for AI context processing.");
-      return;
-    }
-
-    const refineKey = `${sourceCode}|${sourceDialect}|${targetDialect}|${instructions}`;
-    if (refineKey === lastRefineKey) {
-      return;
-    }
-
-    setShowRefinement(false);
-    setIsRefining(true);
-    try {
-      const apiRes = await fetch("/api/refine", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Requested-With": "XMLHttpRequest"
-        },
-        body: JSON.stringify({
-          source_dialect: sourceDialect,
-          target_dialect: targetDialect,
-          sourceSql: sourceCode,
-          sqlGlotOutput: targetCode,
-          userInstructions: instructions,
-        }),
-      });
-
-      if (!apiRes.ok) {
-        let errStr = "Refinement failed";
-        if (apiRes.status === 401) errStr = "Please sign in to use AI refinement";
-        if (apiRes.status === 429) errStr = "AI rate limit exceeded. Please wait.";
-        alert(errStr);
-        return;
-      }
-
-      const res = await apiRes.json();
-
-      if (res.success && res.sql) {
-        setAiRefinedCode(res.sql);
-        setAiExplanation(res.explanation || "");
-        setTargetView("ai");
-        setShowRefinement(false);
-        setInstructions("");
-        setLastRefineKey(refineKey);
-      } else {
-        alert("Failed to refine: " + res.error);
-      }
-    } catch (err) {
-      alert("Refinement execution failed");
-    } finally {
-      setIsRefining(false);
-    }
-  };
-
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-  };
-
-  const handleFeedback = async (isPositive: boolean) => {
-    if (!isPositive && user) {
-      setShowRefinement(true);
-    }
-
-    // Safely fire-and-forget telemetry insertion
-    supabase.from('feedback').insert({
-      user_id: user ? user.id : null,
-      is_positive: isPositive,
-      source_code: sourceCode,
-      target_code: targetCode,
-      source_dialect: sourceDialect,
-      target_dialect: targetDialect
-    }).then(({ error }) => {
-      if (error) console.error("Feedback telemetry failed:", error);
-    });
-  };
-
-  const swapDialects = () => {
-    const temp = sourceDialect;
-    setSourceDialect(targetDialect);
-    setTargetDialect(temp);
-  };
-
-  const isDark = !mounted ? true : (theme === 'system' ? systemTheme === 'dark' : theme === 'dark');
-
-  const getDialect = (value: string) => {
-    const all = [...popular, ...other];
-    return all.find(d => d.value === value);
-  };
-
-  const DialectIcon = ({ icon, className = "w-4 h-4" }: { icon: string; className?: string }) => (
-    <span className="inline-flex items-center justify-center shrink-0 w-5 h-5 rounded bg-slate-100 dark:bg-zinc-800 p-0.5">
-      <img src={icon} alt="" className={`${className} dark:invert opacity-80`} />
-    </span>
-  );
-
-  const DialectOptions = () => (
+function DialectOptions({
+  popular,
+  other,
+}: {
+  popular: ReturnType<typeof getCategorizedDialects>["popular"];
+  other: ReturnType<typeof getCategorizedDialects>["other"];
+}) {
+  return (
     <>
       <SelectGroup>
         <SelectLabel className="text-[10px] uppercase font-bold tracking-wider text-slate-400 dark:text-zinc-500">Popular</SelectLabel>
@@ -261,6 +55,110 @@ export default function Home() {
       </SelectGroup>
     </>
   );
+}
+
+export default function Home() {
+  const [showRefinement, setShowRefinement] = useState(false);
+  const [instructions, setInstructions] = useState("");
+  const [sourceCopied, setSourceCopied] = useState(false);
+  const [targetCopied, setTargetCopied] = useState(false);
+  const [sourcePasted, setSourcePasted] = useState(false);
+
+  const { user, authLoading, signOut, supabase } = useAuth();
+  const {
+    sourceCode,
+    setSourceCode,
+    targetCode,
+    aiRefinedCode,
+    targetView,
+    setTargetView,
+    sourceDialect,
+    setSourceDialect,
+    targetDialect,
+    setTargetDialect,
+    isTranspiling,
+    isRefining,
+    aiExplanation,
+    handleTranspile,
+    handleRefine,
+  } = useSql({ user });
+
+  const copyToClipboard = (text: string, setCopied: (v: boolean) => void) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handlePaste = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text) {
+        setSourceCode(text);
+        setSourcePasted(true);
+        setTimeout(() => setSourcePasted(false), 2000);
+      }
+    } catch (err) {
+      console.error("Failed to read clipboard contents", err);
+    }
+  };
+
+  const { theme, systemTheme } = useTheme();
+  const { popular, other } = getCategorizedDialects();
+
+  useEffect(() => {
+    const savedSource = localStorage.getItem(STORAGE_KEYS.SOURCE_DIALECT) as SqlDialect;
+    const savedTarget = localStorage.getItem(STORAGE_KEYS.TARGET_DIALECT) as SqlDialect;
+    if (savedSource) setSourceDialect(savedSource);
+    if (savedTarget) setTargetDialect(savedTarget);
+  }, [setSourceDialect, setTargetDialect]);
+
+  const handleTranspileClick = async () => {
+    await handleTranspile();
+    setShowRefinement(false);
+  };
+
+  const handleRefineClick = async (nextInstructions: string) => {
+    setShowRefinement(false);
+    await handleRefine(nextInstructions);
+    if (user) {
+      setInstructions("");
+    }
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+  };
+
+  const handleFeedback = async (isPositive: boolean) => {
+    if (!isPositive && user) {
+      setShowRefinement(true);
+    }
+
+    // Safely fire-and-forget telemetry insertion
+    supabase.from('feedback').insert({
+      user_id: user?.id,
+      is_positive: isPositive,
+      source_code: sourceCode,
+      target_code: targetCode,
+      source_dialect: sourceDialect,
+      target_dialect: targetDialect
+    }).then(({ error }) => {
+      if (error) console.error("Feedback telemetry failed:", error);
+    });
+  };
+
+  const swapDialects = () => {
+    const temp = sourceDialect;
+    setSourceDialect(targetDialect);
+    setTargetDialect(temp);
+  };
+
+  const isDark = theme === "system" ? systemTheme === "dark" : theme === "dark";
+
+  const getDialect = (value: string) => {
+    const all = [...popular, ...other];
+    return all.find(d => d.value === value);
+  };
 
   return (
     <div className="flex flex-col min-h-screen w-full bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-300 font-sans relative selection:bg-indigo-200 dark:selection:bg-indigo-500/30 transition-colors duration-500">
@@ -282,7 +180,7 @@ export default function Home() {
             swapDialects();
           } else {
             setSourceDialect(newSource);
-            localStorage.setItem("sqlagnostic_source", newSource);
+            localStorage.setItem(STORAGE_KEYS.SOURCE_DIALECT, newSource);
           }
         }}>
           <SelectTrigger className="w-[210px] h-[36px] border border-slate-300 dark:border-white/10 bg-white dark:bg-zinc-900 text-sm font-semibold rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500/50 dark:focus:ring-indigo-500/40">
@@ -292,7 +190,7 @@ export default function Home() {
             </span>
           </SelectTrigger>
           <SelectContent className="rounded-xl shadow-2xl">
-            <DialectOptions />
+            <DialectOptions popular={popular} other={other} />
           </SelectContent>
         </Select>
 
@@ -307,7 +205,7 @@ export default function Home() {
             swapDialects();
           } else {
             setTargetDialect(newTarget);
-            localStorage.setItem("sqlagnostic_target", newTarget);
+            localStorage.setItem(STORAGE_KEYS.TARGET_DIALECT, newTarget);
           }
         }}>
           <SelectTrigger className="w-[210px] h-[36px] border border-indigo-200 dark:border-indigo-500/20 bg-indigo-50/50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 text-sm font-semibold rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500/50">
@@ -317,7 +215,7 @@ export default function Home() {
             </span>
           </SelectTrigger>
           <SelectContent className="rounded-xl shadow-2xl">
-            <DialectOptions />
+            <DialectOptions popular={popular} other={other} />
           </SelectContent>
         </Select>
       </div>
@@ -383,7 +281,7 @@ export default function Home() {
         {/* CENTRALIZED ACTION COLUMN */}
         <div className="hidden lg:flex flex-col justify-center items-center gap-4 z-20 px-2 relative -mx-2">
           <Button
-            onClick={handleTranspile}
+            onClick={handleTranspileClick}
             disabled={isTranspiling}
             className="w-14 h-14 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white shadow-[0_0_20px_rgba(79,70,229,0.3)] hover:shadow-[0_0_30px_rgba(79,70,229,0.5)] transition-all duration-300 font-semibold border-4 border-slate-50 dark:border-zinc-950 flex shadow-indigo-600/30 items-center justify-center p-0"
             title="Transpile Code"
@@ -398,7 +296,7 @@ export default function Home() {
               onClick={() => {
                 if (!user) return window.location.href = "/login";
                 if (showRefinement) {
-                  if (!isRefining) handleRefine();
+                  if (!isRefining) handleRefineClick(instructions);
                 } else {
                   setShowRefinement(true);
                 }
@@ -407,7 +305,7 @@ export default function Home() {
                 if (!user) return window.location.href = "/login";
                 if (!isRefining) {
                   setInstructions("");
-                  handleRefine();
+                  handleRefineClick("");
                 }
               }}
               title="AI Refine — double click to skip instructions"
@@ -437,7 +335,7 @@ export default function Home() {
                       onKeyDown={(e) => {
                         if (e.key === "Enter" && !e.shiftKey) {
                           e.preventDefault();
-                          if (!isRefining) handleRefine();
+                          if (!isRefining) handleRefineClick(instructions);
                         }
                       }}
                       maxLength={150}

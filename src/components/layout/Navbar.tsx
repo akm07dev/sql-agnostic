@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { User } from "@supabase/supabase-js";
 import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
 import Image from "next/image";
 
 interface NavbarProps {
@@ -16,11 +15,8 @@ interface NavbarProps {
 
 export function Navbar({ user, authLoading, onSignOut }: NavbarProps) {
   const { theme, setTheme, systemTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const selectedTheme = theme || "system";
+  const isDarkTheme = selectedTheme === "dark" || (selectedTheme === "system" && systemTheme === "dark");
 
   return (
     <header className="h-14 shrink-0 border-b border-slate-200 dark:border-white/5 bg-white/70 dark:bg-zinc-950/60 backdrop-blur-xl flex items-center justify-between px-6 z-20 relative">
@@ -42,12 +38,12 @@ export function Navbar({ user, authLoading, onSignOut }: NavbarProps) {
 
       <div className="flex items-center gap-4">
         <Select 
-          value={mounted ? (theme || "system") : "system"} 
+          value={selectedTheme}
           onValueChange={(v) => { if (v) setTheme(v); }}
         >
           <SelectTrigger className="h-8 w-auto px-3 border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-zinc-900 rounded-full text-xs font-semibold shadow-sm focus:ring-1 focus:ring-indigo-500/50">
             <div className="flex items-center gap-2">
-              {mounted && (theme === 'dark' || (theme === 'system' && systemTheme === 'dark')) 
+              {isDarkTheme
                 ? <Moon className="w-3.5 h-3.5 text-indigo-400" /> 
                 : <Sun className="w-3.5 h-3.5 text-yellow-500" />
               }

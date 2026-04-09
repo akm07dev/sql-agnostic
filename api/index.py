@@ -11,11 +11,37 @@ from groq import Groq
 from dotenv import load_dotenv
 import urllib.parse
 import base64
-import os
 
 # Load .env first, if not found or incomplete, load .env.local 
 load_dotenv()
 load_dotenv(".env.local")
+
+CONFIG = {
+    "LIMITS": {
+        "TRANSLATE_AUTH_PER_MINUTE": "20/minute",
+        "TRANSLATE_ANON_PER_MINUTE": "5/minute",
+        "REFINE_PER_MINUTE": "5/minute",
+    },
+    "AUTH": {
+        "AUDIENCE": "authenticated",
+    },
+    "AI": {
+        "GUARD_MODELS": [
+            "llama-3.1-8b-instant",
+            "gemma2-9b-it",
+            "llama-3.2-3b-preview",
+            "llama-3.2-1b-preview",
+            "mixtral-8x7b-32768",
+        ],
+        "REFINE_MODELS": [
+            "llama-3.3-70b-versatile",
+            "openai/gpt-oss-120b",
+            "qwen/qwen3-32b",
+            "llama-3.1-8b-instant",
+            "openai/gpt-oss-20b",
+        ],
+    },
+}
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -104,7 +130,7 @@ def _decode_jwt(token: str) -> dict:
             token,
             signing_key.key,
             algorithms=["RS256", "ES256", "HS256"],
-            audience="authenticated",
+            audience=CONFIG["AUTH"]["AUDIENCE"],
         )
     except jwt.PyJWTError as e:
         raise HTTPException(status_code=401, detail=f"Unauthorized: Invalid token ({e})")
@@ -153,14 +179,6 @@ def _translate_key(request: Request) -> str:
     if user and user.get("sub"):
         return f"user:{user['sub']}"
     return f"anon:{get_real_ip(request)}"
-
-
-def _translate_limit(request: Request) -> str:
-    """Dynamic limit value: check if the user has a valid JWT cookie."""
-    user = try_verify_jwt_cookie(request)
-    if user and user.get("sub"):
-        return "20/minute"
-    return "5/minute"
 
 
 def _refine_key(request: Request) -> str:
@@ -213,7 +231,7 @@ def health_check():
 
 
 @app.post("/api/translate", response_model=TranspileResponse)
-@limiter.limit("20/minute", key_func=_translate_key)
+@limiter.limit(CONFIG["LIMITS"]["TRANSLATE_AUTH_PER_MINUTE"], key_func=_translate_key)
 def translate_sql(request: Request, req: TranspileRequest):
     try:
         read_dialect = req.source_dialect.lower() if req.source_dialect else None
@@ -237,7 +255,7 @@ def translate_sql(request: Request, req: TranspileRequest):
 
 
 @app.post("/api/refine")
-@limiter.limit("5/minute", key_func=_refine_key)
+@limiter.limit(CONFIG["LIMITS"]["REFINE_PER_MINUTE"], key_func=_refine_key)
 def refine_sql(
     request: Request,
     req: RefineRequest,
@@ -249,13 +267,7 @@ def refine_sql(
         
         # Security Guard: Scan for prompt injections
         if user_instructions:
-            guard_models = [
-                "llama-3.1-8b-instant",    # Extremely fast and reliable logic
-                "gemma2-9b-it",            # Google's heavily optimized lightweight model
-                "llama-3.2-3b-preview",    # Hyper lightweight 3 Billion param
-                "llama-3.2-1b-preview",    # Micro 1 Billion param baseline
-                "mixtral-8x7b-32768"       # Highly resilient structural MoE fallback
-            ]
+            guard_models = CONFIG["AI"]["GUARD_MODELS"]
             
             for guard_model in guard_models:
                 try:
@@ -305,13 +317,7 @@ def refine_sql(
                 f"Return ONLY the finalized, corrected SQL query block."
             )
 
-        models_to_try = [
-            "llama-3.3-70b-versatile",
-            "openai/gpt-oss-120b",
-            "qwen/qwen3-32b",
-            "llama-3.1-8b-instant",
-            "openai/gpt-oss-20b"
-        ]
+        models_to_try = CONFIG["AI"]["REFINE_MODELS"]
         
         chat_completion = None
         last_error = None
