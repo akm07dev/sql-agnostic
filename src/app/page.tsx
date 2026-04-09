@@ -273,12 +273,12 @@ export default function Home() {
       {/* Global Toolbar Header - Premium Glassmorphism */}
       <header className="h-14 shrink-0 border-b border-slate-200 dark:border-white/5 bg-white/70 dark:bg-zinc-950/60 backdrop-blur-xl flex items-center justify-between px-6 z-20 relative">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20 ring-1 ring-inset ring-black/10 dark:ring-white/20">
-            <Code2 size={16} strokeWidth={2.5} />
+          <div className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-white/10 flex items-center justify-center shadow-lg border border-slate-200 dark:border-white/10 overflow-hidden transition-all hover:scale-105 duration-300">
+            <img src="/apple-icon.png" alt="SQLAgnostic Logo" className="w-full h-full object-contain p-1.5" />
           </div>
           <div className="flex flex-col">
-            <span className="text-[14px] font-bold tracking-tight text-slate-950 dark:text-gray-50 leading-tight">SQLAgnostic</span>
-            <span className="text-[10px] text-slate-500 dark:text-zinc-400 font-semibold uppercase tracking-widest mt-0.5">Workbench</span>
+            <span className="text-[15px] font-black tracking-tight text-slate-950 dark:text-gray-50 leading-tight">SQLAgnostic</span>
+            <span className="text-[10px] text-slate-500 dark:text-zinc-400 font-bold uppercase tracking-[0.2em] mt-0.5 opacity-80">Workbench</span>
           </div>
         </div>
 
@@ -633,14 +633,14 @@ export default function Home() {
             Transpiler Online
           </span>
           <span className="flex items-center gap-1.5 opacity-80 cursor-default">
-            Powered by <a href="https://github.com/tobymao/sqlglot" target="_blank" rel="noopener noreferrer" className="font-semibold text-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 underline decoration-indigo-500/30 underline-offset-2 transition-colors">SQLGlot</a> & <a href="https://groq.com" target="_blank" rel="noopener noreferrer" className="font-semibold text-orange-500 hover:text-orange-600 dark:hover:text-orange-400 underline decoration-orange-500/30 underline-offset-2 transition-colors">Groq</a>
+            Built with ❤️ by <a href="https://github.com/akm07dev" target="_blank" rel="noopener noreferrer" className="font-semibold text-indigo-500 hover:underline">Ankit Megotia</a> | Powered by <a href="https://github.com/tobymao/sqlglot" target="_blank" rel="noopener noreferrer" className="font-semibold text-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 underline decoration-indigo-500/30 underline-offset-2 transition-colors">SQLGlot</a> & <a href="https://groq.com" target="_blank" rel="noopener noreferrer" className="font-semibold text-orange-500 hover:text-orange-600 dark:hover:text-orange-400 underline decoration-orange-500/30 underline-offset-2 transition-colors">Groq</a>
           </span>
         </div>
         <div className="flex items-center gap-4 text-[11px] font-semibold tracking-wider">
-          <a href="https://github.com/ankit-mego" target="_blank" rel="noopener noreferrer" className="hover:text-slate-900 dark:hover:text-white transition-colors">
+          <a href="https://github.com/akm07dev" target="_blank" rel="noopener noreferrer" className="hover:text-slate-900 dark:hover:text-white transition-colors">
             GITHUB
           </a>
-          <a href="https://www.linkedin.com/in/ankitkm07/" target="_blank" rel="noopener noreferrer" className="hover:text-slate-900 dark:hover:text-white transition-colors">
+          <a href="https://www.linkedin.com/in/akm07dev/" target="_blank" rel="noopener noreferrer" className="hover:text-slate-900 dark:hover:text-white transition-colors">
             LINKEDIN
           </a>
         </div>

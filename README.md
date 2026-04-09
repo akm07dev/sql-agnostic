@@ -7,7 +7,7 @@
 
 **SQLAgnostic** is a high-performance, AI-augmented SQL IDE designed to solve the complexity of database migration and multi-dialect development. It leverages deterministic transpilation mixed with LLM-powered refinement to provide "lossless" SQL conversion across 20+ database architectures.
 
-![Logo](https://raw.githubusercontent.com/ankit-mego/sql-agnostic/main/public/logo-preview.png) *(Placeholder for your logo)*
+![Logo](https://raw.githubusercontent.com/akm07dev/sql-agnostic/main/public/logo-preview.png) *(Placeholder for your logo)*
 
 ## ✨ Features
 
@@ -54,7 +54,7 @@ graph TD
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/ankit-mego/sql-agnostic.git
+   git clone https://github.com/akm07dev/sql-agnostic.git
    cd sql-agnostic
    ```
 
@@ -95,4 +95,4 @@ This project implements strict security patterns suitable for a production envir
 Distributed under the MIT License. See `LICENSE` for more information.
 
 ---
-Built with ❤️ by [Ankit Megotia](https://github.com/ankit-mego)
+Built with ❤️ by [Ankit Megotia](https://github.com/akm07dev)
