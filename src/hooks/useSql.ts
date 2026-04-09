@@ -12,7 +12,7 @@ interface UseSqlProps {
  * Custom hook to manage the lifecycle of a SQL translation session.
  */
 export function useSql({ user }: UseSqlProps) {
-  const [sourceCode, setSourceCode] = useState(SQL_DEFAULTS.SOURCE_SQL);
+  const [sourceCode, setSourceCode] = useState<string>(SQL_DEFAULTS.SOURCE_SQL);
   const [targetCode, setTargetCode] = useState("");
   const [aiRefinedCode, setAiRefinedCode] = useState("");
   const [targetView, setTargetView] = useState<"sqlglot" | "ai" | "diff">("sqlglot");

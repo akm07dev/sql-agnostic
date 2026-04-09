@@ -3,6 +3,15 @@
 SQLAgnostic is a web IDE for cross-dialect SQL migration.
 It combines deterministic SQL transpilation (SQLGlot) with optional AI refinement (Groq) to help developers move queries between engines with higher confidence.
 
+## Live Production
+
+- App URL: [https://sql-agnostic.akm07.dev/](https://sql-agnostic.akm07.dev/)
+- Hosting: Vercel
+- Auth + DB: Supabase
+- Email/password auth: Supabase Auth with Resend configured as SMTP
+- SSO: Google OAuth via Supabase
+- Branded mail delivery: Resend custom domain (project domain sender identity)
+
 ## Highlights
 
 - Deterministic SQL transpilation across popular dialects
@@ -30,11 +39,21 @@ The project uses a Service-Hook-Component pattern on the frontend:
 
 Backend logic is in `api/index.py`, with centralized `CONFIG` for limits and AI model fallback chains.
 
+For deeper details, see:
+
+- `docs/ARCHITECTURE.md`
+- `docs/API.md`
+- `docs/DEPLOYMENT.md`
+
 ## Project Structure
 
 ```text
 api/
   index.py                 # FastAPI endpoints, auth verification, rate limiting, AI pipeline
+docs/
+  ARCHITECTURE.md
+  API.md
+  DEPLOYMENT.md
 src/
   app/
     page.tsx               # Main SQL workbench UI
@@ -72,13 +91,16 @@ src/
 
 ### Environment variables
 
-Create `.env.local` in the repository root:
+Copy `.env.example` to `.env.local` and fill values.
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
-SUPABASE_URL=...
 GROQ_API_KEY=...
+
+# Optional override for backend-only usage.
+# If omitted, backend falls back to NEXT_PUBLIC_SUPABASE_URL.
+SUPABASE_URL=...
 ```
 
 ### Install and run
