@@ -226,7 +226,7 @@ export default function Home() {
       <div className="flex-1 flex flex-col lg:flex-row p-6 pt-4 gap-6 relative z-10 max-w-[1700px] mx-auto w-full">
 
         {/* SOURCE PANE */}
-        <div className="flex-1 flex flex-col min-w-0 min-h-[70vh] bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl shadow-black/5 dark:shadow-black/40 overflow-hidden group">
+        <div className="flex-1 flex flex-col min-w-0 h-[50vh] lg:h-auto lg:min-h-[70vh] bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl shadow-black/5 dark:shadow-black/40 overflow-hidden group">
           {/* Pane Toolbar */}
           <div className="h-12 flex items-center px-4 border-b border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-zinc-900/50 shrink-0 justify-between">
             <div className="flex items-center gap-2">
@@ -256,7 +256,7 @@ export default function Home() {
             </div>
           </div>
           {/* Editor Container */}
-          <div className="flex-1 relative h-full bg-white dark:bg-black/20" id="source-editor-container">
+          <div className="flex-1 relative min-h-0 bg-white dark:bg-black/20">
             <div className="absolute top-3 right-5 z-10 opacity-30 text-[10px] font-mono text-slate-400 dark:text-zinc-500 pointer-events-none select-none tracking-widest">INPUT</div>
             <Editor
               height="100%"
@@ -283,20 +283,20 @@ export default function Home() {
         </div>
 
         {/* CENTRALIZED ACTION COLUMN */}
-        <div className="flex flex-row lg:flex-col justify-center items-center gap-3 lg:gap-4 z-20 px-2 py-2 lg:px-2 lg:py-0 relative lg:-mx-2">
+        <div className="flex flex-row lg:flex-col justify-center items-center gap-4 lg:gap-4 z-20 px-4 py-3 lg:px-2 lg:py-0 relative lg:-mx-2">
           <Button
             onClick={handleTranspileClick}
             disabled={isTranspiling}
-            className="w-10 h-10 lg:w-14 lg:h-14 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white shadow-[0_0_20px_rgba(79,70,229,0.3)] hover:shadow-[0_0_30px_rgba(79,70,229,0.5)] transition-all duration-300 font-semibold border-4 border-slate-50 dark:border-zinc-950 flex shadow-indigo-600/30 items-center justify-center p-0"
+            className="w-14 h-14 lg:w-14 lg:h-14 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white shadow-[0_0_20px_rgba(79,70,229,0.3)] hover:shadow-[0_0_30px_rgba(79,70,229,0.5)] transition-all duration-300 font-semibold border-4 border-slate-50 dark:border-zinc-950 flex shadow-indigo-600/30 items-center justify-center p-0"
             title="Transpile Code"
           >
-            {isTranspiling ? <Loader2 className="animate-spin w-5 h-5 lg:w-6 lg:h-6" /> : <ChevronRight className="w-6 h-6 lg:w-8 lg:h-8 ml-0.5" />}
+            {isTranspiling ? <Loader2 className="animate-spin w-6 h-6 lg:w-6 lg:h-6" /> : <ChevronRight className="w-8 h-8 lg:w-8 lg:h-8 ml-0.5" />}
           </Button>
 
           <div className="relative">
             <Button
               variant="outline"
-              className="w-9 h-9 lg:w-12 lg:h-12 rounded-full bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 text-indigo-600 dark:text-indigo-400 border border-slate-200 dark:border-white/10 shadow-lg hover:shadow-xl transition-all duration-300 p-0"
+              className="w-12 h-12 lg:w-12 lg:h-12 rounded-full bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 text-indigo-600 dark:text-indigo-400 border border-slate-200 dark:border-white/10 shadow-lg hover:shadow-xl transition-all duration-300 p-0"
               onClick={() => {
                 if (!user) return window.location.href = "/login";
                 if (showRefinement) {
@@ -314,14 +314,14 @@ export default function Home() {
               }}
               title="AI Refine — double click to skip instructions"
             >
-              {isRefining ? <Loader2 className="animate-spin w-4 h-4 lg:w-5 lg:h-5" /> : <Sparkles className="w-4 h-4 lg:w-5 lg:h-5" />}
+              {isRefining ? <Loader2 className="animate-spin w-5 h-5 lg:w-5 lg:h-5" /> : <Sparkles className="w-5 h-5 lg:w-5 lg:h-5" />}
             </Button>
 
           </div>
         </div>
 
         {/* TARGET PANE */}
-        <div className="flex-1 flex flex-col min-w-0 min-h-[70vh] bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl shadow-black/5 dark:shadow-black/40 overflow-hidden relative group">
+        <div className="flex-1 flex flex-col min-w-0 h-[50vh] lg:h-auto lg:min-h-[70vh] bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl shadow-black/5 dark:shadow-black/40 overflow-hidden relative group">
           {/* Pane Toolbar */}
           <div className="h-12 flex items-center px-4 border-b border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-zinc-900/50 shrink-0 justify-between">
             <div className="flex items-center gap-2">
@@ -370,7 +370,7 @@ export default function Home() {
           </div>
 
           {/* Editor Container */}
-          <div className="flex-1 relative h-full bg-slate-50/50 dark:bg-black/20" id="target-editor-container">
+          <div className="flex-1 relative min-h-0 bg-slate-50/50 dark:bg-black/20">
             <div className="absolute top-3 right-5 z-10 opacity-30 text-[10px] font-mono text-slate-400 dark:text-zinc-500 pointer-events-none select-none tracking-widest">
               {targetView === "diff" ? "AI DIFF" : targetView === "ai" ? "AI OUTPUT" : "TRANSPILER OUTPUT"}
             </div>
