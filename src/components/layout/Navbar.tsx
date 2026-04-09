@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { User } from "@supabase/supabase-js";
 import { useTheme } from "next-themes";
+import { useSyncExternalStore } from "react";
 import Image from "next/image";
 
 interface NavbarProps {
@@ -14,8 +15,13 @@ interface NavbarProps {
 }
 
 export function Navbar({ user, authLoading, onSignOut }: NavbarProps) {
+  const isClient = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
   const { theme, setTheme, systemTheme } = useTheme();
-  const selectedTheme = theme || "system";
+  const selectedTheme = isClient ? (theme || "system") : "system";
   const isDarkTheme = selectedTheme === "dark" || (selectedTheme === "system" && systemTheme === "dark");
 
   return (
