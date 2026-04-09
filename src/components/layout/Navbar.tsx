@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { User } from "@supabase/supabase-js";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
+import Image from "next/image";
 
 interface NavbarProps {
   user: User | null;
@@ -25,7 +26,13 @@ export function Navbar({ user, authLoading, onSignOut }: NavbarProps) {
     <header className="h-14 shrink-0 border-b border-slate-200 dark:border-white/5 bg-white/70 dark:bg-zinc-950/60 backdrop-blur-xl flex items-center justify-between px-6 z-20 relative">
       <div className="flex items-center gap-3">
         <div className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-white/10 flex items-center justify-center shadow-lg border border-slate-200 dark:border-white/10 overflow-hidden transition-all hover:scale-105 duration-300">
-          <img src="/apple-icon.png" alt="SQLAgnostic Logo" className="w-full h-full object-contain p-1.5" />
+          <Image 
+            src="/apple-icon.png" 
+            alt="SQLAgnostic Logo" 
+            width={36}
+            height={36}
+            className="w-full h-full object-contain p-1.5" 
+          />
         </div>
         <div className="flex flex-col">
           <span className="text-[15px] font-black tracking-tight text-slate-950 dark:text-gray-50 leading-tight">SQLAgnostic</span>

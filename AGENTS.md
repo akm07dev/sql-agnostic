@@ -1,73 +1,53 @@
-# AGENTS.md — AI Agent Context for SQLAgnostic
-
-This file provides context for AI coding agents working on this codebase.
-
 ## Tech Stack
 
-- **Frontend**: Next.js 16 (App Router, React 19, TypeScript, Tailwind CSS v4, shadcn/ui)
-- **Backend**: Python FastAPI with SQLGlot for SQL transpilation, Groq SDK for AI refinement
-- **Auth**: Supabase Auth (Google SSO + email/password), managed via HttpOnly cookies
-- **Email**: Resend (configured as SMTP in Supabase Dashboard, not in code)
-- **UI Components**: shadcn/ui with Base UI primitives, Monaco Editor for SQL editing
+- **Frontend**: Next.js 15 (App Router, React 19, TypeScript, Tailwind CSS v4, shadcn/ui)
+- **Backend**: Python FastAPI (SQLGlot transpilation, Groq AI refinement)
+- **State Management**: Custom React Hooks (`useAuth`, `useSql`)
+- **API Strategy**: Singleton Service Layer (`src/services/sqlService.ts`)
+- **UI Components**: Modular architecture (`src/components/layout`, `src/components/editor`)
+- **Optimization**: Next.js optimized `<Image />` rendering
 
 ## Architecture Overview
 
-Next.js acts as a BFF (Backend-for-Frontend). The `src/proxy.ts` file (Next.js 16's replacement for `middleware.ts`) handles Supabase session refresh on every request. All `/api/*` routes are rewritten to FastAPI (`http://127.0.0.1:53321`) in development via `next.config.ts`.
+SQLAgnostic follows a **Service-Hook-Component** design pattern:
 
-FastAPI independently verifies Supabase JWTs using RS256 asymmetric verification via the JWKS endpoint. It never needs the JWT secret — only the public key.
+1.  **Service Layer**: `sqlService.ts` encapsulates all network logic. Components never call `fetch` directly.
+2.  **Hooks Layer**: Custom hooks (`useSql`, `useAuth`) manage complex state and lifecycle, consuming the Service layer.
+3.  **Components**: Pure UI components (Navbar, Footer, Editor) consume hooks and props.
+4.  **Constants & Types**: Centralized configuration in `lib/constants.ts` (Frontend) and `CONFIG` dictionary (Backend).
 
 ## Key Patterns
 
+### Global Configuration (Parity)
+- **Frontend**: `APP_CONFIG` and `SQL_LIMITS` in `src/lib/constants.ts`.
+- **Backend**: `CONFIG` dictionary in `api/index.py`.
+- *Crucial*: Character limits (100k for transpilation, 10k for AI) and AI model lists must be kept in sync across both layers.
+
 ### Authentication Flow
-1. User signs in via Google SSO or email/password on `/login`
-2. Supabase sets HttpOnly `sb-<ref>-auth-token` cookies
-3. `proxy.ts` refreshes tokens on every request and mutates headers for downstream forwarding
-4. FastAPI reads these cookies, reassembles chunked values, and verifies via JWKS
+1. User sign-in managed via `src/hooks/useAuth.ts`.
+2. Supabase session state is abstracted from the UI components.
+3. API endpoints secure access via `Depends(verify_jwt_cookie)`.
 
-### Rate Limiting Strategy
-- `/api/translate`: **5/min anonymous** (by IP), **20/min authenticated** (by user ID)
-- `/api/refine`: **5/min authenticated only** — requires valid JWT cookie + CSRF header
+### Component Modularization
+- Do not add complex logic or massive UI blocks to `src/app/page.tsx`.
+- Extract layout elements to `src/components/layout/`.
+- Extract editor-specific tools to `src/components/editor/`.
 
-### CSRF Protection
-All mutating endpoints require `X-Requested-With: XMLHttpRequest` header. Browsers enforce CORS preflight on custom headers, blocking cross-origin form attacks.
-
-### Suspense Boundary Requirement
-Next.js App Router requires `useSearchParams()` to be wrapped in a `<Suspense>` boundary. If a Client Component uses this hook, it must be isolated into an inner component and wrapped within the page-level export to avoid build-time deoptimization (CSR bailout).
-
-## File Conventions
-
-- `src/proxy.ts` — This is **not** custom middleware. It's Next.js 16's renamed `middleware.ts` (the export is `proxy` instead of `middleware`).
-- `src/app/login/actions.ts` — Server actions for auth (signUp, signIn, signOut, resetPassword, updatePassword)
-- `api/index.py` — Single FastAPI file containing all endpoints, auth, rate limiting, and AI logic
-
-## Environment Variables
-
-### `.env.local` (Next.js)
-```
-NEXT_PUBLIC_SUPABASE_URL
-NEXT_PUBLIC_SUPABASE_ANON_KEY
-```
-
-### `api/.env` (FastAPI)
-```
-SUPABASE_URL
-GROQ_API_KEY
-```
+### AI Refinement Pipeline
+- AI refinement uses a **Guard Mode** (security) followed by **Executive Logic** (translation).
+- Model fallbacks are managed in the backend `CONFIG["AI_MODELS"]`.
+- Always provide JSON-formatted instructions to the AI to ensure consistent parsing.
 
 ## Common Tasks
 
 ### Adding a new API endpoint
-1. Add the endpoint in `api/index.py`
-2. It's automatically proxied via the `/api/*` rewrite in `next.config.ts`
-3. If it requires auth, use `Depends(verify_jwt_cookie)`
-4. If it requires CSRF, add `Depends(verify_csrf)`
-5. Add rate limiting with `@limiter.limit("X/minute", key_func=...)`
+1. Add the endpoint in `api/index.py`.
+2. Define the Request/Response types in `src/types/`.
+3. Add a method to `src/services/sqlService.ts`.
+4. Consume via a custom hook or directly in the component if simple.
 
-### Adding a new SQL dialect
-1. Add it to `src/lib/dialects.ts` — both the type union and the categorized list
-2. SQLGlot handles the actual transpilation; just ensure the dialect name matches SQLGlot's expected value
+### Modifying AI Behavior
+Update the prompts or model lists in `api/index.py`. Keep the `GUARD_MODELS` and `AI_MODELS` lists separate for security.
 
-### Running the project
-```bash
-npm run dev  # Starts both Next.js and FastAPI via concurrently
-```
+### Deploying
+The project is built for Vercel. Ensure `NEXT_PUBLIC_SUPABASE_URL` and `GROQ_API_KEY` are set in production env vars.

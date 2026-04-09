@@ -1,14 +1,7 @@
 "use client";
 
-/**
- * SQLAgnostic - Main Workbench
- * 
- * This is the core IDE component for the SQLAgnostic platform.
- * It handles the deterministic transpilation of SQL via SQLGlot
- * and adds an AI-powered refinement layer via Groq/Llama-3.
- */
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
+import Image from "next/image";
 import { Editor, DiffEditor } from "@monaco-editor/react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,13 +10,11 @@ import {
   Sparkles, 
   ThumbsDown, 
   ThumbsUp, 
-  Code2, 
   ChevronRight, 
-  Minimize2, 
-  Settings2, 
   Copy, 
   Check, 
-  ClipboardPaste 
+  ClipboardPaste,
+  Loader2
 } from "lucide-react";
 
 // Components
@@ -391,7 +382,3 @@ export default function Home() {
   );
 }
 
-// Helper Loader for SSR
-const Loader2 = ({ className }: { className?: string }) => (
-  <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
-);
