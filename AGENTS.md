@@ -1,5 +1,9 @@
 # AGENTS.md — AI Agent Context for SQLAgnostic
 
+**Author:** akm07 (https://akm07.dev)  
+**Repository:** https://github.com/akm07dev/sql-agnostic  
+**License:** MIT
+
 This file provides context for AI coding agents working on this codebase.
 
 ## Tech Stack
@@ -42,15 +46,11 @@ Next.js App Router requires `useSearchParams()` to be wrapped in a `<Suspense>` 
 
 ## Environment Variables
 
-### `.env.local` (Next.js)
+All environment variables are in `.env.local` at the project root. Both Next.js and FastAPI load from this file.
+
 ```
 NEXT_PUBLIC_SUPABASE_URL
 NEXT_PUBLIC_SUPABASE_ANON_KEY
-```
-
-### `api/.env` (FastAPI)
-```
-SUPABASE_URL
 GROQ_API_KEY
 ```
 
@@ -67,7 +67,66 @@ GROQ_API_KEY
 1. Add it to `src/lib/dialects.ts` — both the type union and the categorized list
 2. SQLGlot handles the actual transpilation; just ensure the dialect name matches SQLGlot's expected value
 
+### Modifying rate limits
+1. Update `CONFIG["LIMITS"]` in `api/index.py`
+2. Update `SQL_LIMITS` in `src/lib/constants.ts` if frontend validation needed
+3. Update user-facing messages in `AUTH_MESSAGES` constant
+
+### Updating AI prompts
+1. Guard model prompt: Search for "strict security module" in `api/index.py`
+2. Refinement model prompt: Search for "expert SQL translation agent" in `api/index.py`
+3. Models are defined in `CONFIG["AI"]["GUARD_MODELS"]` and `CONFIG["AI"]["REFINE_MODELS"]`
+
+### Adding a new component
+1. Use shadcn/ui CLI: `npx shadcn add <component>`
+2. Import from `@/components/ui/<component>`
+3. Follow existing dark mode patterns with `dark:` prefixes
+
 ### Running the project
 ```bash
 npm run dev  # Starts both Next.js and FastAPI via concurrently
 ```
+
+## File Relationships
+
+```
+User Request
+    ↓
+[proxy.ts] - Session refresh, header mutation
+    ↓
+Next.js App Router
+    ↓
+page.tsx → useSql.ts → sqlService.ts → /api/* (next.config.ts rewrite)
+    ↓
+api/index.py (FastAPI)
+    ├── /api/translate → sqlglot.transpile()
+    └── /api/refine → Guard Model → Refinement Model → Groq
+    ↓
+Response → useSql.ts state update → React re-render
+```
+
+## Troubleshooting
+
+### "Unauthorized: Missing authentication cookies" (401)
+- Check Supabase session is valid
+- Verify `sb-<ref>-auth-token` cookie exists in browser dev tools
+- Ensure `proxy.ts` is running (not bypassed)
+
+### Rate limit errors (429)
+- Guest users: 5 req/min for `/api/translate`
+- Authenticated: 20 req/min for `/api/translate`, 5 req/min for `/api/refine`
+- Check `X-Forwarded-For` header is passing through proxy
+
+### AI refinement fails with "CSRF check failed"
+- Verify `X-Requested-With: XMLHttpRequest` header is sent in fetch request
+- Check `sqlService.ts` for correct header implementation
+
+### SQLGlot parse errors
+- Verify source dialect matches SQLGlot's expected names (all lowercase)
+- Check SQL syntax validity independently
+- Some dialect features may not be supported by SQLGlot
+
+### Development server issues
+- Ensure Python virtual environment is activated
+- Check FastAPI port 53321 is not in use
+- Verify `.env.local` and `api/.env` files exist with correct values

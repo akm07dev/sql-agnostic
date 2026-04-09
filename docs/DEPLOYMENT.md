@@ -14,19 +14,15 @@ This project is deployed on Vercel and integrated with Supabase + Resend.
 - SSO provider: Google (configured in Supabase Auth)
 - Mail sender branding: custom domain configured in Resend
 
-## Environment Variables (Vercel)
+## Environment Variables
+
+All environment variables are in `.env.local` at the project root. Both Next.js and FastAPI load from this file.
 
 Required:
 
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `GROQ_API_KEY`
-
-Optional:
-
-- `SUPABASE_URL`
-
-`SUPABASE_URL` is optional in this codebase because backend auth setup falls back to `NEXT_PUBLIC_SUPABASE_URL` when it is not present.
 
 ## Runtime Notes
 

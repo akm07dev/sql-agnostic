@@ -113,7 +113,7 @@ def _extract_jwt_from_cookies(request: Request) -> str | None:
 # JWKS setup
 # ---------------------------------------------------------------------------
 
-supabase_url = os.getenv("SUPABASE_URL") or os.getenv("NEXT_PUBLIC_SUPABASE_URL")
+supabase_url = os.getenv("NEXT_PUBLIC_SUPABASE_URL")
 jwks_client: PyJWKClient | None = None
 if supabase_url:
     jwks_url = f"{supabase_url.rstrip('/')}/auth/v1/.well-known/jwks.json"
@@ -123,7 +123,7 @@ if supabase_url:
 def _decode_jwt(token: str) -> dict:
     """Verify and decode a Supabase JWT using RS256 JWKS."""
     if not jwks_client:
-        raise HTTPException(status_code=500, detail="Server not configured for JWT auth (Missing SUPABASE_URL)")
+        raise HTTPException(status_code=500, detail="Server not configured for JWT auth (Missing NEXT_PUBLIC_SUPABASE_URL)")
     try:
         signing_key = jwks_client.get_signing_key_from_jwt(token)
         return jwt.decode(

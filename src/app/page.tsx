@@ -14,6 +14,7 @@ import { Footer } from "@/components/layout/Footer";
 import { STORAGE_KEYS } from "@/lib/constants";
 import { useAuth } from "@/hooks/useAuth";
 import { useSql } from "@/hooks/useSql";
+import { JsonLd } from "@/components/seo/JsonLd";
 
 const DialectIcon = ({ icon, className = "w-4 h-4" }: { icon: string; className?: string }) => (
   <span className="inline-flex items-center justify-center shrink-0 w-5 h-5 rounded bg-slate-100 dark:bg-zinc-800 p-0.5">
@@ -162,6 +163,7 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-screen w-full bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-300 font-sans relative selection:bg-indigo-200 dark:selection:bg-indigo-500/30 transition-colors duration-500">
+      <JsonLd />
 
       {/* Background decorations - isolated in overflow-hidden container */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
