@@ -1,124 +1,281 @@
 ﻿# SQLAgnostic
 
-SQLAgnostic is a web IDE for cross-dialect SQL migration.
-It combines deterministic SQL transpilation (SQLGlot) with optional AI refinement (Groq) to help developers move queries between engines with higher confidence.
+<p align="center">
+  <strong>Convert SQL queries between 31+ database dialects</strong>
+</p>
 
-## Live Production
+<p align="center">
+  <a href="https://sql-agnostic.akm07.dev/">
+    <img src="https://img.shields.io/badge/Live%20Demo-sql--agnostic.akm07.dev-4f46e5?style=for-the-badge" alt="Live Demo" />
+  </a>
+  <a href="https://github.com/akm07dev/sql-agnostic">
+    <img src="https://img.shields.io/github/license/akm07dev/sql-agnostic?style=for-the-badge" alt="License" />
+  </a>
+</p>
 
-- App URL: [https://sql-agnostic.akm07.dev/](https://sql-agnostic.akm07.dev/)
-- Hosting: Vercel
-- Auth + DB: Supabase
-- Email/password auth: Supabase Auth with Resend configured as SMTP
-- SSO: Google OAuth via Supabase
-- Branded mail delivery: Resend custom domain (project domain sender identity)
+<p align="center">
+  <img src="https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js" />
+  <img src="https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react" />
+  <img src="https://img.shields.io/badge/TypeScript-5.0-3178C6?style=flat-square&logo=typescript" />
+  <img src="https://img.shields.io/badge/Tailwind-v4-38B2AC?style=flat-square&logo=tailwind-css" />
+  <img src="https://img.shields.io/badge/Python-3.9+-3776AB?style=flat-square&logo=python" />
+  <img src="https://img.shields.io/badge/FastAPI-0.100+-009688?style=flat-square&logo=fastapi" />
+  <img src="https://img.shields.io/badge/SQLGlot-MIT-green?style=flat-square" />
+  <img src="https://img.shields.io/badge/Groq-AI-orange?style=flat-square" />
+  <img src="https://img.shields.io/badge/Supabase-3ECF8E?style=flat-square&logo=supabase" />
+</p>
 
-## Highlights
+---
 
-- Deterministic SQL transpilation across popular dialects
-- Optional AI refinement with model fallback strategy
-- Monaco editor + diff view for transparent output review
-- Supabase cookie auth with backend JWT verification (JWKS)
-- Tiered rate limiting for guest vs authenticated usage
+## 🚀 Live Demo
 
-## Tech Stack
+**Try it now**: [https://sql-agnostic.akm07.dev](https://sql-agnostic.akm07.dev)
 
-- Frontend: Next.js 16, React 19, TypeScript, Tailwind CSS v4, shadcn/ui
-- Backend: FastAPI (Python)
-- SQL Engine: SQLGlot
-- AI Provider: Groq
-- Auth: Supabase
-- Deployment target: Vercel
+A free, open-source SQL dialect converter with deterministic transpilation and optional AI-powered refinement.
 
-## Architecture
+## ✨ What Makes It Special
 
-The project uses a Service-Hook-Component pattern on the frontend:
+### Two-Stage Pipeline
 
-1. Service layer: `src/services/sqlService.ts`
-2. Hooks layer: `src/hooks/useAuth.ts`, `src/hooks/useSql.ts`
-3. UI layer: `src/components/*` + `src/app/page.tsx`
-
-Backend logic is in `api/index.py`, with centralized `CONFIG` for limits and AI model fallback chains.
-
-For deeper details, see:
-
-- `docs/ARCHITECTURE.md`
-- `docs/API.md`
-- `docs/DEPLOYMENT.md`
-
-## Project Structure
-
-```text
-api/
-  index.py                 # FastAPI endpoints, auth verification, rate limiting, AI pipeline
-docs/
-  ARCHITECTURE.md
-  API.md
-  DEPLOYMENT.md
-src/
-  app/
-    page.tsx               # Main SQL workbench UI
-    layout.tsx             # Root app layout
-    robots.ts              # Robots metadata
-    sitemap.ts             # Sitemap metadata
-  components/
-    layout/                # Navbar and Footer
-  hooks/
-    useAuth.ts             # Supabase session hook
-    useSql.ts              # SQL translation/refinement session hook
-  services/
-    sqlService.ts          # API client singleton
-  lib/
-    constants.ts           # Frontend constants (limits, keys, links, endpoints)
-    dialects.ts            # Supported SQL dialect metadata
-  types/
-    sql.ts                 # API request/response types
+```mermaid
+flowchart LR
+    subgraph Stage1["🔧 Stage 1: Deterministic"]
+        SQL["Source SQL"]
+        SQLGlot["SQLGlot<br/>MIT License"]
+        Base["Base Conversion"]
+    end
+    
+    subgraph Stage2["🤖 Stage 2: AI-Powered"]
+        Guard["Guard Model<br/>Security Check"]
+        AI["Refinement Model<br/>Fallback Chain"]
+        Diff["Visual Diff View"]
+    end
+    
+    SQL --> SQLGlot --> Base
+    Base -->|Optional| Stage2
+    Guard --> AI --> Diff
+    Base -.-> Diff
+    
+    style Stage1 fill:#dcfce7,stroke:#22c55e
+    style Stage2 fill:#e0e7ff,stroke:#4f46e5
 ```
 
-## Security Model
+**Stage 1 (SQLGlot)**: Fast, deterministic, never hallucinates  
+**Stage 2 (AI)**: Semantic improvements only when you need them
 
-- FastAPI verifies Supabase JWT cookies via JWKS (RS256 flow)
-- `/api/refine` requires authentication and CSRF header (`X-Requested-With`)
-- Rate limiting:
-  - `/api/translate`: 5/min guest, 20/min authenticated
-  - `/api/refine`: 5/min authenticated
+### Key Features
 
-## Local Development
+| Feature | Description |
+|---------|-------------|
+| 🔀 **31 SQL Dialects** | PostgreSQL, MySQL, SQL Server, Oracle, Snowflake, BigQuery, DuckDB, ClickHouse, and 24 more |
+| 🤖 **AI Refinement** | Optional Groq-powered improvements with guard model security |
+| 🔄 **Model Fallback** | 5-model chain for 99%+ availability |
+| 📝 **Monaco Editor** | VS Code-quality editing with syntax highlighting |
+| 🆚 **Visual Diff** | Side-by-side comparison of transpiler vs AI output |
+| 🔐 **Secure Auth** | JWT verification via JWKS, CSRF protection, tiered rate limiting |
+| 💰 **Free Tier** | 5 conversions/min as guest, 20/min when signed in |
+
+## 🛠️ Tech Stack
+
+### Frontend
+- **Next.js 16** (App Router, React 19, Server Components)
+- **TypeScript** (strict mode, typed API contracts)
+- **Tailwind CSS v4** (utility-first, dark mode)
+- **shadcn/ui** (accessible UI components)
+- **Monaco Editor** (VS Code editor, SQL syntax highlighting)
+
+### Backend
+- **FastAPI** (async Python, Pydantic validation)
+- **SQLGlot** (MIT license, 31+ dialect support)
+- **Groq** (AI refinement with model fallback)
+- **Supabase** (JWT auth, PostgreSQL)
+- **SlowAPI** (rate limiting)
+
+### Infrastructure
+- **Vercel** (frontend + Python serverless)
+- **Resend** (transactional email)
+
+## 🏗️ Architecture
+
+### System Overview
+
+```mermaid
+flowchart TD
+    subgraph Frontend["Next.js 16 Frontend"]
+        UI["React UI"]
+        Hooks["useSql.ts / useAuth.ts"]
+        Service["sqlService.ts"]
+    end
+    
+    subgraph Backend["FastAPI Backend"]
+        Auth["JWT Auth<br/>(JWKS RS256)"]
+        RateLimit["Rate Limiter"]
+        Translate["/api/translate"]
+        Refine["/api/refine<br/>+ CSRF + Guard"]
+    end
+    
+    subgraph External["External"]
+        Supabase["Supabase Auth"]
+        Groq["Groq AI"]
+    end
+    
+    UI --> Hooks --> Service --> RateLimit --> Auth
+    Auth --> Translate --> SQLGlot[("SQLGlot")]
+    Auth --> Refine --> Groq
+    Auth -.-> Supabase
+    
+    style Frontend fill:#e0e7ff,stroke:#4f46e5
+    style Backend fill:#dcfce7,stroke:#22c55e
+    style External fill:#fef3c7,stroke:#f59e0b
+```
+
+### Frontend Pattern: Service-Hook-Component
+
+```
+┌─────────────────────────────────────┐
+│  Component Layer (page.tsx)         │
+│  - Rendering & user interaction     │
+├─────────────────────────────────────┤
+│  Hook Layer (useSql.ts)             │
+│  - State management & lifecycle     │
+├─────────────────────────────────────┤
+│  Service Layer (sqlService.ts)      │
+│  - API transport & error handling   │
+└─────────────────────────────────────┘
+```
+
+**Documentation:**
+- 📐 [Architecture Details](docs/ARCHITECTURE.md)
+- 🔌 [API Reference](docs/API.md)
+- 🚀 [Deployment Guide](docs/DEPLOYMENT.md)
+- 🎓 [Engineering Walkthrough](docs/WALKTHROUGH.md)
+
+## 📁 Project Structure
+
+```
+sql-agnostic/
+├── api/
+│   └── index.py              # FastAPI: endpoints, auth, rate limits, AI pipeline
+├── docs/
+│   ├── ARCHITECTURE.md       # System architecture & diagrams
+│   ├── API.md                # API reference
+│   ├── DEPLOYMENT.md         # Deployment guide
+│   └── WALKTHROUGH.md        # Engineering decisions
+├── src/
+│   ├── app/
+│   │   ├── page.tsx          # Main SQL workbench UI
+│   │   ├── layout.tsx        # Root layout with SEO
+│   │   ├── manifest.ts       # PWA manifest
+│   │   ├── opengraph-image.tsx  # Dynamic OG images
+│   │   ├── sitemap.ts        # Sitemap generation
+│   │   └── login/
+│   │       └── actions.ts    # Auth server actions
+│   ├── components/
+│   │   ├── layout/           # Navbar, Footer
+│   │   └── seo/              # JsonLd structured data
+│   ├── hooks/
+│   │   ├── useAuth.ts        # Supabase auth state
+│   │   └── useSql.ts         # SQL workflow state
+│   ├── services/
+│   │   └── sqlService.ts     # API client singleton
+│   ├── lib/
+│   │   ├── constants.ts      # App config & limits
+│   │   └── dialects.ts       # 31 SQL dialect definitions
+│   └── types/
+│       └── sql.ts            # TypeScript API types
+├── public/                   # Static assets
+└── AGENTS.md                 # AI assistant context
+```
+
+## 🔒 Security Model
+
+| Control | Implementation |
+|---------|---------------|
+| **JWT Verification** | JWKS endpoint (RS256), verify on every request |
+| **Cookie Security** | HttpOnly, chunked cookie reassembly for SSR |
+| **CSRF Protection** | `X-Requested-With` header on mutating endpoints |
+| **AI Guard Model** | Prompt injection detection before processing |
+| **Rate Limiting** | IP-based (guest) vs User ID (authenticated) |
+
+```
+Guest:     5  conversions/min on /api/translate
+Auth:      20 conversions/min on /api/translate
+           5  refinements/min on /api/refine (auth only)
+```
+
+The backend **never trusts** the frontend session. JWTs are independently verified via Supabase JWKS on every request.
+
+## 🚀 Getting Started
 
 ### Prerequisites
 
 - Node.js 18+
 - Python 3.9+
+- Supabase account (free tier works)
+- Groq API key (free tier works)
 
-### Environment variables
-
-Copy `.env.example` to `.env.local` and fill values.
-
-```env
-NEXT_PUBLIC_SUPABASE_URL=...
-NEXT_PUBLIC_SUPABASE_ANON_KEY=...
-GROQ_API_KEY=...
-
-# Optional override for backend-only usage.
-# If omitted, backend falls back to NEXT_PUBLIC_SUPABASE_URL.
-SUPABASE_URL=...
-```
-
-### Install and run
+### Quick Setup
 
 ```bash
+# Clone & install
+git clone https://github.com/akm07dev/sql-agnostic.git
+cd sql-agnostic
 npm install
 pip install -r requirements.txt
+
+# Environment setup
+cp .env.example .env.local
+# Edit .env.local with your keys:
+# - NEXT_PUBLIC_SUPABASE_URL
+# - NEXT_PUBLIC_SUPABASE_ANON_KEY
+# - GROQ_API_KEY
+
+# Run both Next.js and FastAPI
 npm run dev
 ```
 
-`npm run dev` starts both Next.js and FastAPI.
+The app runs at `http://localhost:3000` with API at `http://localhost:53321`.
 
-## Why this project is portfolio-ready
+### Environment Variables
 
-- Clear separation of concerns (service vs hook vs component)
-- Centralized constants and typed API contracts
-- Defensive backend design (auth verification, CSRF, fallback models, throttling)
-- Practical developer UX (editor, copy/paste, diff, refinement workflow)
+| Variable | Location | Purpose |
+|----------|----------|---------|
+| `NEXT_PUBLIC_SUPABASE_URL` | `.env.local` | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `.env.local` | Supabase public key |
+| `SUPABASE_URL` | `api/.env` | Backend auth (falls back to public URL) |
+| `GROQ_API_KEY` | `api/.env` | AI refinement service |
+
+## 💼 Why This Project is Portfolio-Ready
+
+### Engineering Excellence
+
+✅ **Full-stack TypeScript + Python** — Demonstrates versatility across ecosystems  
+✅ **Security-first design** — JWT verification, CSRF, rate limiting, prompt injection guards  
+✅ **Production-ready patterns** — Service-hook-component architecture, centralized config  
+✅ **AI integration** — Model fallback chains, guard models, structured outputs  
+✅ **DevOps awareness** — Vercel deployment, environment management, PWA support
+
+### Business Value
+
+✅ **Solves real problem** — Database migration pain point for developers  
+✅ **Cost-conscious design** — Rate limiting, free tier, AI guard model  
+✅ **User trust** — Transparent diff view, inspectable AI changes  
+✅ **Scalable foundation** — Stateless backend, tiered usage limits
+
+### Interview Talking Points
+
+- *"Why FastAPI over Next.js API routes?"* — SQLGlot ecosystem, Pydantic validation
+- *"Why two-stage pipeline?"* — Deterministic base + optional AI beats AI-only
+- *"How do you handle AI costs?"* — Rate limiting, guard model, model fallback
+- *"Security model?"* — Never trust frontend, verify JWT via JWKS every request
+
+---
+
+<p align="center">
+  Built by <a href="https://akm07.dev">akm07</a> • 
+  <a href="https://github.com/akm07dev/sql-agnostic">GitHub</a> • 
+  <a href="https://www.linkedin.com/in/ankitkm07/">LinkedIn</a>
+</p>
 
 ## License
 
