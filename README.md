@@ -1,133 +1,98 @@
-# SQLAgnostic
+# SQLAgnostic 🚀
 
-A high-performance, database-agnostic SQL dialect translator with AI-powered refinement.
+[![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js)](https://nextjs.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-Python-009688?logo=fastapi)](https://fastapi.tiangolo.com/)
+[![Groq](https://img.shields.io/badge/AI-Groq%20Llama%203-orange)](https://groq.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**Deterministic Translation** via [SQLGlot](https://github.com/tobymao/sqlglot) · **AI Refinement** via [Groq](https://groq.com/) (DeepSeek-R1) · **Auth** via [Supabase](https://supabase.com/)
+**SQLAgnostic** is a high-performance, AI-augmented SQL IDE designed to solve the complexity of database migration and multi-dialect development. It leverages deterministic transpilation mixed with LLM-powered refinement to provide "lossless" SQL conversion across 20+ database architectures.
 
-## Architecture
+![Logo](https://raw.githubusercontent.com/ankit-mego/sql-agnostic/main/public/logo-preview.png) *(Placeholder for your logo)*
 
+## ✨ Features
+
+- **Multi-Dialect Transpilation**: Convert SQL between Oracle, PostgreSQL, Snowflake, BigQuery, T-SQL, and 15+ more using SQLGlot.
+- **AI-Powered Refinement**: Uses Llama 3 (via Groq) to identify and fix semantic divergences that traditional transpilers miss (e.g., complex window functions, session-state variables).
+- **Pro-Grade Diff Viewer**: Side-by-side comparison with syntax highlighting to track exactly what the AI changed.
+- **Enterprise Security**: 
+  - Transactional JWT verification via Supabase RS256 JWKS.
+  - Multi-tiered rate limiting (Tiered for Anonymous vs. Authenticated).
+  - CSRF protection on all mutating endpoints.
+- **Premium UX**: Built with shadcn/ui, Tailwind CSS v4, and Monaco Editor.
+
+## 🏗️ Architecture
+
+```mermaid
+graph TD
+    User([User Browser]) -- Next.js / React --> FE[Frontend App Router]
+    FE -- JWT Cookies --> Proxy[(Auth Proxy)]
+    Proxy -- Verified Request --> API[FastAPI Backend]
+    API -- Analysis --> SQLGlot[SQLGlot Transpiler]
+    API -- Refinement --> Groq[Groq AI / Llama 3]
+    API -- Auth Check --> Supabase[Supabase JWKS]
 ```
-┌──────────────┐     rewrites /api/*     ┌──────────────────┐
-│  Next.js 16  │ ──────────────────────► │  FastAPI (Python) │
-│  Frontend    │                         │                   │
-│  + Proxy     │  ◄───── cookies ──────  │  SQLGlot engine   │
-│  + Auth SSR  │                         │  Groq AI refine   │
-└──────────────┘                         │  JWT verification │
-                                         │  Rate limiting    │
-                                         └──────────────────┘
-```
 
-- **Next.js 16** — Frontend UI, Supabase SSR auth, cookie-based session management, token rotation
-- **FastAPI** — Deterministic SQL transpilation (SQLGlot), AI refinement (Groq/DeepSeek-R1), RS256 JWT verification via JWKS, CSRF protection, tiered rate limiting
+## 🛠️ Tech Stack
 
-## Features
+- **Frontend**: Next.js 15 (App Router), TypeScript, Tailwind CSS v4, shadcn/ui.
+- **Backend**: Python FastAPI.
+- **Core Engine**: SQLGlot.
+- **AI Intelligence**: Groq SDK (Llama 3.3 70B & 8B fallbacks).
+- **Database/Auth**: Supabase.
+- **Deployment**: Vercel (Next.js + Python Serverless Functions).
 
-| Feature | Details |
-|---|---|
-| SQL Translation | 20+ SQL dialects via SQLGlot (PostgreSQL, MySQL, T-SQL, BigQuery, Snowflake, etc.) |
-| AI Refinement | DeepSeek-R1 via Groq for reasoning-based SQL correction |
-| Auth | Google SSO (primary) + email/password with Resend SMTP |
-| Rate Limiting | Anonymous: 5/min translate. Authenticated: 20/min translate, 5/min AI |
-| Security | RS256 JWKS JWT verification, CSRF protection, HttpOnly cookies |
-
-## Getting Started
+## 🚀 Getting Started
 
 ### Prerequisites
 
-- Node.js 20+
-- Python 3.11+
-- Supabase project (free tier works)
+- Node.js 18+
+- Python 3.9+
+- Supabase Account
+- Groq API Key
 
-### 1. Clone & Install
+### Installation
 
-```bash
-git clone <repo-url>
-cd sql-agnostic
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/ankit-mego/sql-agnostic.git
+   cd sql-agnostic
+   ```
 
-# Frontend
-npm install
+2. **Frontend Setup**
+   ```bash
+   npm install
+   ```
 
-# Backend
-python -m venv venv
-venv\Scripts\activate  # Windows
-pip install -r backend/requirements.txt
-```
+3. **Backend Setup**
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # venv\Scripts\activate on Windows
+   pip install -r requirements.txt
+   ```
 
-### 2. Environment Variables
+4. **Environment Variables**
+   Create a `.env.local` (Next.js) and `api/.env` (Python):
+   ```env
+   NEXT_PUBLIC_SUPABASE_URL=your_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_key
+   GROQ_API_KEY=your_key
+   ```
 
-Create `.env.local` in the project root:
+5. **Run Locally**
+   ```bash
+   npm run dev
+   ```
 
-```env
-NEXT_PUBLIC_SUPABASE_URL="https://your-project.supabase.co"
-NEXT_PUBLIC_SUPABASE_ANON_KEY="your-anon-key"
-```
+## 🔒 Security
 
-Create `backend/.env`:
+This project implements strict security patterns suitable for a production environment:
+- **JWT Handling**: Passwords and sessions are managed entirely by Supabase. The FastAPI backend never sees user passwords; it only verifies asymmetric RSA-256 signatures from Supabase's JWKS.
+- **Rate Limiting**: Integrated `slowapi` to prevent API abuse, with specialized limits for AI-heavy routes.
+- **CSRF**: Custom header validation for all POST requests to block cross-site attacks.
 
-```env
-SUPABASE_URL="https://your-project.supabase.co"
-GROQ_API_KEY="your-groq-api-key"
-```
+## 📄 License
 
-### 3. Supabase Configuration
+Distributed under the MIT License. See `LICENSE` for more information.
 
-#### Auth Providers (Dashboard → Auth → Providers)
-- **Google**: Add your Google OAuth Client ID and Secret
-- **Email**: Enabled by default
-
-#### SMTP for Emails (Dashboard → Auth → SMTP Settings)
-Configure Resend as your email provider:
-- Host: `smtp.resend.com`
-- Port: `465`
-- Username: `resend`
-- Password: your Resend API key
-- Sender email: your verified Resend domain email
-
-### 4. Run
-
-```bash
-npm run dev
-```
-
-This starts both Next.js (port 3000) and FastAPI (port 53321) via `concurrently`.
-
-Open [http://localhost:3000](http://localhost:3000).
-
-## Project Structure
-
-```
-sql-agnostic/
-├── backend/
-│   ├── main.py              # FastAPI app (translate, refine, auth, rate limiting)
-│   └── requirements.txt     # Python dependencies
-├── src/
-│   ├── app/
-│   │   ├── page.tsx          # Main translator UI (auth-aware)
-│   │   ├── layout.tsx        # Root layout
-│   │   ├── login/
-│   │   │   ├── page.tsx      # Login (Google SSO + email/password)
-│   │   │   ├── actions.ts    # Server actions (signUp, signIn, resetPassword, etc.)
-│   │   │   ├── reset/        # Password reset request page
-│   │   │   └── update-password/  # Set new password page
-│   │   └── auth/
-│   │       └── callback/     # OAuth callback handler
-│   ├── lib/
-│   │   └── dialects.ts       # SQL dialect definitions
-│   ├── utils/
-│   │   └── supabase/         # Supabase client helpers (browser, server, middleware)
-│   └── proxy.ts              # Next.js 16 proxy (session refresh + cookie forwarding)
-├── .env.local                # Frontend env vars (gitignored)
-└── next.config.ts            # API rewrites to FastAPI
-```
-
-## Security Model
-
-- **JWT Verification**: FastAPI verifies Supabase JWTs using asymmetric RS256 via the JWKS endpoint — no shared secrets
-- **CSRF Protection**: All mutating API calls require `X-Requested-With: XMLHttpRequest` header
-- **Rate Limiting**: IP-based for anonymous users, user-ID-based for authenticated (via `X-Forwarded-For`)
-- **Token Rotation**: Next.js proxy silently refreshes expired tokens and forwards fresh cookies to FastAPI
-- **HttpOnly Cookies**: All auth tokens managed server-side, never exposed to client JavaScript
-
-## License
-
-MIT
+---
+Built with ❤️ by [Ankit Megotia](https://github.com/ankit-mego)
