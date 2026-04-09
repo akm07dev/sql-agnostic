@@ -46,15 +46,11 @@ Next.js App Router requires `useSearchParams()` to be wrapped in a `<Suspense>` 
 
 ## Environment Variables
 
-### `.env.local` (Next.js)
+All environment variables are in `.env.local` at the project root. Both Next.js and FastAPI load from this file.
+
 ```
 NEXT_PUBLIC_SUPABASE_URL
 NEXT_PUBLIC_SUPABASE_ANON_KEY
-```
-
-### `api/.env` (FastAPI)
-```
-SUPABASE_URL
 GROQ_API_KEY
 ```
 

@@ -282,12 +282,13 @@ flowchart TB
 
 ### Environment Variables
 
-| Variable | Location | Purpose |
-|----------|----------|---------|
-| `NEXT_PUBLIC_SUPABASE_URL` | `.env.local` | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `.env.local` | Supabase public anon key |
-| `SUPABASE_URL` | `api/.env` | Backend auth verification |
-| `GROQ_API_KEY` | `api/.env` | AI refinement service |
+All environment variables are in `.env.local` at the project root.
+
+| Variable | Purpose |
+|----------|---------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase public anon key |
+| `GROQ_API_KEY` | AI refinement service |
 
 ## Technology Choices
 

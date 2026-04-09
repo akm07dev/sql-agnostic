@@ -242,32 +242,7 @@ The app runs at `http://localhost:3000` with API at `http://localhost:53321`.
 |----------|----------|---------|
 | `NEXT_PUBLIC_SUPABASE_URL` | `.env.local` | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `.env.local` | Supabase public key |
-| `SUPABASE_URL` | `api/.env` | Backend auth (falls back to public URL) |
-| `GROQ_API_KEY` | `api/.env` | AI refinement service |
-
-## 💼 Why This Project is Portfolio-Ready
-
-### Engineering Excellence
-
-✅ **Full-stack TypeScript + Python** — Demonstrates versatility across ecosystems  
-✅ **Security-first design** — JWT verification, CSRF, rate limiting, prompt injection guards  
-✅ **Production-ready patterns** — Service-hook-component architecture, centralized config  
-✅ **AI integration** — Model fallback chains, guard models, structured outputs  
-✅ **DevOps awareness** — Vercel deployment, environment management, PWA support
-
-### Business Value
-
-✅ **Solves real problem** — Database migration pain point for developers  
-✅ **Cost-conscious design** — Rate limiting, free tier, AI guard model  
-✅ **User trust** — Transparent diff view, inspectable AI changes  
-✅ **Scalable foundation** — Stateless backend, tiered usage limits
-
-### Interview Talking Points
-
-- *"Why FastAPI over Next.js API routes?"* — SQLGlot ecosystem, Pydantic validation
-- *"Why two-stage pipeline?"* — Deterministic base + optional AI beats AI-only
-- *"How do you handle AI costs?"* — Rate limiting, guard model, model fallback
-- *"Security model?"* — Never trust frontend, verify JWT via JWKS every request
+| `GROQ_API_KEY` | `.env.local` | AI refinement service |
 
 ---
 
