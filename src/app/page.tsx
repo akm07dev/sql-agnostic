@@ -3,14 +3,15 @@
 import { useState, useEffect } from "react";
 import { Editor, DiffEditor } from "@monaco-editor/react";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel, SelectSeparator } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectGroup, SelectLabel, SelectSeparator } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeftRight, Sparkles, ThumbsDown, ThumbsUp, Loader2, LogOut, Code2, ChevronRight, Minimize2, Settings2, Moon, Sun, Copy, Check, ClipboardPaste } from "lucide-react";
+import { ArrowLeftRight, Sparkles, ThumbsDown, ThumbsUp, Loader2, ChevronRight, Minimize2, Copy, Check, ClipboardPaste } from "lucide-react";
 import { getCategorizedDialects, type SqlDialect } from "@/lib/dialects";
 import { createClient } from "@/utils/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import { useTheme } from "next-themes";
+import { Navbar } from "@/components/layout/Navbar";
+import { Footer } from "@/components/layout/Footer";
 
 export default function Home() {
   const [sourceCode, setSourceCode] = useState("-- Enter your SQL here\nSELECT * FROM users;");
@@ -53,7 +54,7 @@ export default function Home() {
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
 
-  const { theme, setTheme, systemTheme } = useTheme();
+  const { theme, systemTheme } = useTheme();
   // Protect hydration errors
   const [mounted, setMounted] = useState(false);
 
@@ -270,65 +271,7 @@ export default function Home() {
         <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-blue-500/10 dark:bg-blue-900/10 blur-[120px]" />
       </div>
 
-      {/* Global Toolbar Header - Premium Glassmorphism */}
-      <header className="h-14 shrink-0 border-b border-slate-200 dark:border-white/5 bg-white/70 dark:bg-zinc-950/60 backdrop-blur-xl flex items-center justify-between px-6 z-20 relative">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/20 ring-1 ring-inset ring-black/10 dark:ring-white/20">
-            <Code2 size={16} strokeWidth={2.5} />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-[14px] font-bold tracking-tight text-slate-950 dark:text-gray-50 leading-tight">SQLAgnostic</span>
-            <span className="text-[10px] text-slate-500 dark:text-zinc-400 font-semibold uppercase tracking-widest mt-0.5">Workbench</span>
-          </div>
-        </div>
-
-          <div className="flex items-center gap-4">
-            <Select value={mounted ? (theme || "system") : "system"} onValueChange={(v) => { if (v) setTheme(v); }}>
-              <SelectTrigger className="h-8 w-auto px-3 border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-zinc-900 rounded-full text-xs font-semibold shadow-sm focus:ring-1 focus:ring-indigo-500/50">
-                <div className="flex items-center gap-2">
-                  {mounted && (theme === 'dark' || (theme === 'system' && systemTheme === 'dark')) ? <Moon className="w-3.5 h-3.5 text-indigo-400" /> : <Sun className="w-3.5 h-3.5 text-yellow-500" />}
-                  <SelectValue />
-                </div>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="light">Light</SelectItem>
-                <SelectItem value="dark">Dark</SelectItem>
-                <SelectItem value="system">System</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <div className="h-4 w-[1px] bg-slate-300 dark:bg-white/10 mx-1"></div>
-
-            {authLoading ? (
-              <Loader2 className="animate-spin w-4 h-4 text-slate-400 dark:text-zinc-600" />
-            ) : user ? (
-              <div className="flex items-center gap-3">
-                <div className="flex flex-col text-right">
-                  <span className="text-[11px] font-medium text-slate-600 dark:text-zinc-300">{user.email}</span>
-                  <span className="text-[9px] text-slate-400 dark:text-zinc-500 uppercase tracking-wider">Authenticated</span>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleSignOut}
-                  className="h-8 w-8 text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-white/5 rounded-full transition-all duration-300"
-                  title="Sign Out"
-                >
-                  <LogOut size={14} />
-                </Button>
-              </div>
-            ) : (
-              <Button
-                variant="default"
-                size="sm"
-                onClick={() => window.location.href = "/login"}
-                className="h-8 text-xs px-4 bg-slate-900 dark:bg-white text-white dark:text-black hover:bg-slate-800 dark:hover:bg-zinc-200 rounded-md font-semibold transition-all duration-300 shadow-md dark:shadow-[0_0_15px_rgba(255,255,255,0.1)]"
-              >
-                Sign In
-              </Button>
-            )}
-          </div>
-      </header>
+      <Navbar user={user} authLoading={authLoading} onSignOut={handleSignOut} />
 
       {/* Top Routing Header Centralized below main header */}
       <div className="w-full flex justify-center items-center py-5 -mb-2 z-10 gap-3 border-b border-transparent bg-slate-50/50 dark:bg-zinc-950/80 backdrop-blur-3xl">
@@ -622,29 +565,7 @@ export default function Home() {
         </div>
       )}
 
-      {/* Footer / Status Bar Area */}
-      <footer className="h-7 shrink-0 border-t border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-zinc-950 flex items-center px-6 justify-between text-[11px] text-slate-500 dark:text-zinc-500 font-mono z-20 transition-colors">
-        <div className="flex items-center gap-5">
-          <span className="flex items-center gap-2 group cursor-pointer hover:text-slate-700 dark:hover:text-zinc-300 transition-colors">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 dark:bg-green-400 opacity-30 dark:opacity-20"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-600 dark:bg-green-500"></span>
-            </span>
-            Transpiler Online
-          </span>
-          <span className="flex items-center gap-1.5 opacity-80 cursor-default">
-            Powered by <a href="https://github.com/tobymao/sqlglot" target="_blank" rel="noopener noreferrer" className="font-semibold text-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 underline decoration-indigo-500/30 underline-offset-2 transition-colors">SQLGlot</a> & <a href="https://groq.com" target="_blank" rel="noopener noreferrer" className="font-semibold text-orange-500 hover:text-orange-600 dark:hover:text-orange-400 underline decoration-orange-500/30 underline-offset-2 transition-colors">Groq</a>
-          </span>
-        </div>
-        <div className="flex items-center gap-4 text-[11px] font-semibold tracking-wider">
-          <a href="https://github.com/ankit-mego" target="_blank" rel="noopener noreferrer" className="hover:text-slate-900 dark:hover:text-white transition-colors">
-            GITHUB
-          </a>
-          <a href="https://www.linkedin.com/in/ankitkm07/" target="_blank" rel="noopener noreferrer" className="hover:text-slate-900 dark:hover:text-white transition-colors">
-            LINKEDIN
-          </a>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
