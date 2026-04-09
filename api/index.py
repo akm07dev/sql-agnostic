@@ -21,6 +21,29 @@ load_dotenv(".env.local")
 # Helpers
 # ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# Configuration & Constants
+# ---------------------------------------------------------------------------
+
+CONFIG = {
+    "TRANSPILATION_MAX_CHARS": 100000,
+    "AI_REFINEMENT_MAX_CHARS": 10000,
+    "GUARD_MODELS": [
+        "llama-3.1-8b-instant",
+        "gemma2-9b-it",
+        "llama-3.2-3b-preview",
+        "llama-3.2-1b-preview",
+        "mixtral-8x7b-32768"
+    ],
+    "AI_MODELS": [
+        "llama-3.3-70b-versatile",
+        "openai/gpt-oss-120b",
+        "qwen/qwen3-32b",
+        "llama-3.1-8b-instant",
+        "openai/gpt-oss-20b"
+    ],
+}
+
 def get_real_ip(req: Request) -> str:
     """Extract the real client IP from X-Forwarded-For (set by Next.js proxy)."""
     forwarded = req.headers.get("X-Forwarded-For")
@@ -215,6 +238,10 @@ def health_check():
 @app.post("/api/translate", response_model=TranspileResponse)
 @limiter.limit("20/minute", key_func=_translate_key)
 def translate_sql(request: Request, req: TranspileRequest):
+    # Enforce character limit via centralized config
+    if len(req.sql) > CONFIG["TRANSPILATION_MAX_CHARS"]:
+        return TranspileResponse(transpiled_sql="", error=f"Source SQL exceeds {CONFIG['TRANSPILATION_MAX_CHARS']} character limit.")
+
     try:
         read_dialect = req.source_dialect.lower() if req.source_dialect else None
         write_dialect = req.target_dialect.lower() if req.target_dialect else None
@@ -231,9 +258,9 @@ def translate_sql(request: Request, req: TranspileRequest):
             error=None,
         )
     except sqlglot.errors.ParseError as e:
-        return TranspileResponse(transpiled_sql="", error=str(e))
+        return TranspileResponse(transpiled_sql="", error=f"SQLGlot Parse Error: {str(e)}")
     except Exception as e:
-        return TranspileResponse(transpiled_sql="", error=str(e))
+        return TranspileResponse(transpiled_sql="", error=f"Transpilation failed: {str(e)}")
 
 
 @app.post("/api/refine")
@@ -244,18 +271,16 @@ def refine_sql(
     user_payload: dict = Depends(verify_jwt_cookie),
     csrf: None = Depends(verify_csrf),
 ):
+    # Enforce character limit via centralized config
+    if req.sourceSql and len(req.sourceSql) > CONFIG["AI_REFINEMENT_MAX_CHARS"]:
+         return {"success": False, "error": f"Source SQL exceeds {CONFIG['AI_REFINEMENT_MAX_CHARS']} character context limit."}
+
     try:
         user_instructions = req.userInstructions.strip() if req.userInstructions else ""
         
         # Security Guard: Scan for prompt injections
         if user_instructions:
-            guard_models = [
-                "llama-3.1-8b-instant",    # Extremely fast and reliable logic
-                "gemma2-9b-it",            # Google's heavily optimized lightweight model
-                "llama-3.2-3b-preview",    # Hyper lightweight 3 Billion param
-                "llama-3.2-1b-preview",    # Micro 1 Billion param baseline
-                "mixtral-8x7b-32768"       # Highly resilient structural MoE fallback
-            ]
+            guard_models = CONFIG["GUARD_MODELS"]
             
             for guard_model in guard_models:
                 try:
@@ -305,13 +330,7 @@ def refine_sql(
                 f"Return ONLY the finalized, corrected SQL query block."
             )
 
-        models_to_try = [
-            "llama-3.3-70b-versatile",
-            "openai/gpt-oss-120b",
-            "qwen/qwen3-32b",
-            "llama-3.1-8b-instant",
-            "openai/gpt-oss-20b"
-        ]
+        models_to_try = CONFIG["AI_MODELS"]
         
         chat_completion = None
         last_error = None
