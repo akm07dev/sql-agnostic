@@ -8,8 +8,8 @@ const SIMPLE_ICON = (slug: string) => `https://cdn.jsdelivr.net/npm/simple-icons
 
 export function Footer() {
   return (
-    <footer className="h-7 shrink-0 border-t border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-zinc-950 flex items-center px-6 justify-between text-[11px] text-slate-500 dark:text-zinc-500 font-mono z-20 transition-colors">
-      <div className="flex items-center gap-5">
+    <footer className="min-h-7 shrink-0 border-t border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-zinc-950 flex flex-col sm:flex-row items-center sm:justify-between px-4 sm:px-6 py-2 sm:py-0 text-[11px] text-slate-500 dark:text-zinc-500 font-mono z-20 transition-colors gap-2 sm:gap-0">
+      <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-5">
         <span className="flex items-center gap-2 cursor-default">
           <span className="relative flex h-2 w-2">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 dark:bg-green-400 opacity-30 dark:opacity-20"></span>
@@ -17,7 +17,7 @@ export function Footer() {
           </span>
           Transpiler Online
         </span>
-        <span className="flex items-center gap-1.5 opacity-80 cursor-default">
+        <span className="flex items-center gap-1.5 opacity-80 cursor-default text-center sm:text-left">
           Built with ❤️ by <a href={APP_LINKS.GITHUB} target="_blank" rel="noopener noreferrer" className="font-semibold text-indigo-500 hover:underline">Ankit Megotia</a> | Powered by <a href="https://github.com/tobymao/sqlglot" target="_blank" rel="noopener noreferrer" className="font-semibold text-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 underline decoration-indigo-500/30 underline-offset-2 transition-colors">SQLGlot</a> & <a href="https://groq.com" target="_blank" rel="noopener noreferrer" className="font-semibold text-orange-500 hover:text-orange-600 dark:hover:text-orange-400 underline decoration-orange-500/30 underline-offset-2 transition-colors">Groq</a>
         </span>
       </div>
