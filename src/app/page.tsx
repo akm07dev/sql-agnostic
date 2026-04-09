@@ -174,7 +174,7 @@ export default function Home() {
       <Navbar user={user} authLoading={authLoading} onSignOut={handleSignOut} />
 
       {/* Top Routing Header Centralized below main header */}
-      <div className="w-full flex justify-center items-center py-5 -mb-2 z-10 gap-3 border-b border-transparent bg-slate-50/50 dark:bg-zinc-950/80 backdrop-blur-3xl">
+      <div className="w-full flex flex-col sm:flex-row justify-center items-center py-4 sm:py-5 px-4 -mb-2 z-10 gap-2 sm:gap-3 border-b border-transparent bg-slate-50/50 dark:bg-zinc-950/80 backdrop-blur-3xl">
         <Select value={sourceDialect} onValueChange={(v: string | null) => {
           if (!v) return;
           const newSource = v as SqlDialect;
@@ -185,18 +185,18 @@ export default function Home() {
             localStorage.setItem(STORAGE_KEYS.SOURCE_DIALECT, newSource);
           }
         }}>
-          <SelectTrigger className="w-[210px] h-[36px] border border-slate-300 dark:border-white/10 bg-white dark:bg-zinc-900 text-sm font-semibold rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500/50 dark:focus:ring-indigo-500/40">
+          <SelectTrigger className="w-[140px] sm:w-[180px] md:w-[210px] h-[36px] border border-slate-300 dark:border-white/10 bg-white dark:bg-zinc-900 text-sm font-semibold rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500/50 dark:focus:ring-indigo-500/40">
             <span className="flex items-center gap-2 truncate">
               <DialectIcon icon={getDialect(sourceDialect)?.icon ?? ""} className="w-4 h-4 shrink-0" />
               {getDialect(sourceDialect)?.label || sourceDialect}
             </span>
           </SelectTrigger>
-          <SelectContent className="rounded-xl shadow-2xl">
+          <SelectContent className="rounded-xl shadow-2xl max-h-[60vh]">
             <DialectOptions popular={popular} other={other} />
           </SelectContent>
         </Select>
 
-        <Button variant="outline" size="icon" className="h-8 w-8 rounded-full border-slate-300 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-sm hover:shadow-md hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-white transition-all" onClick={swapDialects} title="Reverse Dialects">
+        <Button variant="outline" size="icon" className="h-8 w-8 rounded-full border-slate-300 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-sm hover:shadow-md hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-white transition-all shrink-0" onClick={swapDialects} title="Reverse Dialects">
           <ArrowLeftRight className="w-3.5 h-3.5" />
         </Button>
 
@@ -210,13 +210,13 @@ export default function Home() {
             localStorage.setItem(STORAGE_KEYS.TARGET_DIALECT, newTarget);
           }
         }}>
-          <SelectTrigger className="w-[210px] h-[36px] border border-indigo-200 dark:border-indigo-500/20 bg-indigo-50/50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 text-sm font-semibold rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500/50">
+          <SelectTrigger className="w-[140px] sm:w-[180px] md:w-[210px] h-[36px] border border-indigo-200 dark:border-indigo-500/20 bg-indigo-50/50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 text-sm font-semibold rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500/50">
             <span className="flex items-center gap-2 truncate">
               <DialectIcon icon={getDialect(targetDialect)?.icon ?? ""} className="w-4 h-4 shrink-0" />
               {getDialect(targetDialect)?.label || targetDialect}
             </span>
           </SelectTrigger>
-          <SelectContent className="rounded-xl shadow-2xl">
+          <SelectContent className="rounded-xl shadow-2xl max-h-[60vh]">
             <DialectOptions popular={popular} other={other} />
           </SelectContent>
         </Select>
@@ -226,7 +226,7 @@ export default function Home() {
       <div className="flex-1 flex flex-col lg:flex-row p-6 pt-4 gap-6 relative z-10 max-w-[1700px] mx-auto w-full">
 
         {/* SOURCE PANE */}
-        <div className="flex-1 flex flex-col min-w-0 min-h-[70vh] bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl shadow-black/5 dark:shadow-black/40 overflow-hidden group">
+        <div className="flex-1 flex flex-col min-w-0 min-h-[40vh] sm:min-h-[50vh] lg:min-h-[70vh] bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl shadow-black/5 dark:shadow-black/40 overflow-hidden group">
           {/* Pane Toolbar */}
           <div className="h-12 flex items-center px-4 border-b border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-zinc-900/50 shrink-0 justify-between">
             <div className="flex items-center gap-2">
@@ -278,6 +278,41 @@ export default function Home() {
               }}
             />
           </div>
+
+          {/* Mobile Action Buttons - shown only on small screens */}
+          <div className="flex lg:hidden items-center justify-center gap-3 p-3 border-t border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-zinc-900/50 shrink-0">
+            <Button
+              onClick={handleTranspileClick}
+              disabled={isTranspiling}
+              className="flex-1 h-10 bg-indigo-600 hover:bg-indigo-500 text-white shadow-md transition-all duration-300 font-semibold rounded-lg flex items-center justify-center gap-2"
+            >
+              {isTranspiling ? <Loader2 className="animate-spin w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+              <span className="text-sm">Transpile</span>
+            </Button>
+
+            <Button
+              variant="outline"
+              className="flex-1 h-10 bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 text-indigo-600 dark:text-indigo-400 border border-slate-200 dark:border-white/10 shadow-sm transition-all duration-300 rounded-lg flex items-center justify-center gap-2"
+              onClick={() => {
+                if (!user) return window.location.href = "/login";
+                if (showRefinement) {
+                  if (!isRefining) handleRefineClick(instructions);
+                } else {
+                  setShowRefinement(true);
+                }
+              }}
+              onDoubleClick={() => {
+                if (!user) return window.location.href = "/login";
+                if (!isRefining) {
+                  setInstructions("");
+                  handleRefineClick("");
+                }
+              }}
+            >
+              {isRefining ? <Loader2 className="animate-spin w-4 h-4" /> : <Sparkles className="w-4 h-4" />}
+              <span className="text-sm">AI Refine</span>
+            </Button>
+          </div>
         </div>
 
         {/* CENTRALIZED ACTION COLUMN */}
@@ -315,47 +350,11 @@ export default function Home() {
               {isRefining ? <Loader2 className="animate-spin w-5 h-5" /> : <Sparkles className="w-5 h-5" />}
             </Button>
 
-            {/* AI Refinement Popup */}
-            {showRefinement && (
-              <div className="absolute left-1/2 -translate-x-1/2 top-16 w-[300px] border border-slate-300 dark:border-white/10 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl shadow-2xl rounded-xl z-50 animate-in slide-in-from-top-2 flex flex-col transition-colors overflow-hidden">
-                <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-white/[0.02]">
-                  <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
-                    <Sparkles size={11} />
-                    <span className="text-[11px] font-semibold tracking-wide">Refinement Instructions</span>
-                  </div>
-                  <Button variant="ghost" size="icon" className="h-5 w-5 text-slate-500 dark:text-zinc-500 hover:text-slate-800 dark:hover:text-white rounded-md transition-colors" onClick={() => setShowRefinement(false)}>
-                    <Minimize2 size={11} />
-                  </Button>
-                </div>
-                <div className="p-3 flex flex-col gap-2">
-                  <div className="relative">
-                    <Textarea
-                      placeholder="e.g. Use explicit JOINs, quote all columns..."
-                      className="w-full resize-none bg-white dark:bg-black/50 border-slate-300 dark:border-white/10 focus-visible:ring-1 focus-visible:ring-indigo-500 text-sm min-h-[60px] placeholder:text-slate-400 dark:placeholder:text-zinc-600 rounded-lg shadow-inner text-slate-800 dark:text-zinc-300 pb-5"
-                      value={instructions}
-                      onChange={(e) => setInstructions(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && !e.shiftKey) {
-                          e.preventDefault();
-                          if (!isRefining) handleRefineClick(instructions);
-                        }
-                      }}
-                      maxLength={150}
-                      autoFocus
-                    />
-                    <div className="absolute bottom-1.5 right-2.5 text-[9px] font-medium text-slate-400 dark:text-zinc-600 pointer-events-none select-none">
-                      {instructions.length}/150
-                    </div>
-                  </div>
-                  <p className="text-[10px] text-slate-400 dark:text-zinc-600 text-center">Enter to submit · double-click ✨ to skip</p>
-                </div>
-              </div>
-            )}
           </div>
         </div>
 
         {/* TARGET PANE */}
-        <div className="flex-1 flex flex-col min-w-0 min-h-[70vh] bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl shadow-black/5 dark:shadow-black/40 overflow-hidden relative group">
+        <div className="flex-1 flex flex-col min-w-0 min-h-[40vh] sm:min-h-[50vh] lg:min-h-[70vh] bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl shadow-black/5 dark:shadow-black/40 overflow-hidden relative group">
           {/* Pane Toolbar */}
           <div className="h-12 flex items-center px-4 border-b border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-zinc-900/50 shrink-0 justify-between">
             <div className="flex items-center gap-2">
@@ -463,6 +462,93 @@ export default function Home() {
             <div className="p-4 text-[13px] text-slate-600 dark:text-zinc-400 leading-relaxed whitespace-pre-wrap font-mono">{aiExplanation}</div>
           </div>
         </div>
+      )}
+
+      {/* AI Refinement Popup - Shared between mobile and desktop */}
+      {showRefinement && (
+        <>
+          {/* Desktop: positioned near the center action buttons */}
+          <div className="hidden lg:block absolute left-1/2 top-[280px] -translate-x-1/2 w-[300px] border border-slate-300 dark:border-white/10 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl shadow-2xl rounded-xl z-50 animate-in slide-in-from-top-2 flex flex-col transition-colors overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-white/[0.02]">
+              <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
+                <Sparkles size={11} />
+                <span className="text-[11px] font-semibold tracking-wide">Refinement Instructions</span>
+              </div>
+              <Button variant="ghost" size="icon" className="h-5 w-5 text-slate-500 dark:text-zinc-500 hover:text-slate-800 dark:hover:text-white rounded-md transition-colors" onClick={() => setShowRefinement(false)}>
+                <Minimize2 size={11} />
+              </Button>
+            </div>
+            <div className="p-3 flex flex-col gap-2">
+              <div className="relative">
+                <Textarea
+                  placeholder="e.g. Use explicit JOINs, quote all columns..."
+                  className="w-full resize-none bg-white dark:bg-black/50 border-slate-300 dark:border-white/10 focus-visible:ring-1 focus-visible:ring-indigo-500 text-sm min-h-[60px] placeholder:text-slate-400 dark:placeholder:text-zinc-600 rounded-lg shadow-inner text-slate-800 dark:text-zinc-300 pb-5"
+                  value={instructions}
+                  onChange={(e) => setInstructions(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      if (!isRefining) handleRefineClick(instructions);
+                    }
+                  }}
+                  maxLength={150}
+                  autoFocus
+                />
+                <div className="absolute bottom-1.5 right-2.5 text-[9px] font-medium text-slate-400 dark:text-zinc-600 pointer-events-none select-none">
+                  {instructions.length}/150
+                </div>
+              </div>
+              <p className="text-[10px] text-slate-400 dark:text-zinc-600 text-center">Enter to submit · double-click ✨ to skip</p>
+            </div>
+          </div>
+
+          {/* Mobile: bottom sheet style */}
+          <div className="lg:hidden fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setShowRefinement(false)}>
+            <div className="w-full max-w-md mx-4 mb-4 border border-slate-300 dark:border-white/10 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl shadow-2xl rounded-xl z-50 animate-in slide-in-from-bottom-10 flex flex-col transition-colors overflow-hidden" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-white/[0.02]">
+                <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
+                  <Sparkles size={12} />
+                  <span className="text-sm font-semibold tracking-wide">Refinement Instructions</span>
+                </div>
+                <Button variant="ghost" size="icon" className="h-6 w-6 text-slate-500 dark:text-zinc-500 hover:text-slate-800 dark:hover:text-white rounded-md transition-colors" onClick={() => setShowRefinement(false)}>
+                  <Minimize2 size={12} />
+                </Button>
+              </div>
+              <div className="p-4 flex flex-col gap-3">
+                <div className="relative">
+                  <Textarea
+                    placeholder="e.g. Use explicit JOINs, quote all columns..."
+                    className="w-full resize-none bg-white dark:bg-black/50 border-slate-300 dark:border-white/10 focus-visible:ring-1 focus-visible:ring-indigo-500 text-sm min-h-[80px] placeholder:text-slate-400 dark:placeholder:text-zinc-600 rounded-lg shadow-inner text-slate-800 dark:text-zinc-300 pb-6"
+                    value={instructions}
+                    onChange={(e) => setInstructions(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        if (!isRefining) handleRefineClick(instructions);
+                      }
+                    }}
+                    maxLength={150}
+                    autoFocus
+                  />
+                  <div className="absolute bottom-2 right-3 text-[10px] font-medium text-slate-400 dark:text-zinc-600 pointer-events-none select-none">
+                    {instructions.length}/150
+                  </div>
+                </div>
+                <Button
+                  onClick={() => {
+                    if (!isRefining) handleRefineClick(instructions);
+                  }}
+                  disabled={isRefining}
+                  className="w-full h-10 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-lg"
+                >
+                  {isRefining ? <Loader2 className="animate-spin w-4 h-4 mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
+                  Submit
+                </Button>
+                <p className="text-[11px] text-slate-400 dark:text-zinc-600 text-center">Enter to submit · tap backdrop to close</p>
+              </div>
+            </div>
+          </div>
+        </>
       )}
 
       <Footer />
