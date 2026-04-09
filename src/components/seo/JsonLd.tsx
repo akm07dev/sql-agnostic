@@ -12,22 +12,21 @@ export function JsonLd() {
     url: "https://sql-agnostic.akm07.dev",
     image: "https://sql-agnostic.akm07.dev/opengraph-image",
     description:
-      "SQL Dialect Converter for 31+ Databases. Convert SQL queries between PostgreSQL, MySQL, SQL Server, Oracle, Snowflake, BigQuery, DuckDB, ClickHouse, and 24 more dialects with AI-powered refinement, side-by-side diff view, and Monaco editor.",
+      "Convert SQL queries between 31+ database dialects including PostgreSQL, MySQL, SQL Server, Oracle, Snowflake, BigQuery, DuckDB, ClickHouse, and more. Built with SQLGlot (MIT license). Features deterministic transpilation, optional AI-powered refinement, side-by-side Monaco editor, and visual diff view.",
     author: {
-      "@type": "Organization",
+      "@type": "Person",
       name: "akm07",
       url: "https://akm07.dev",
     },
     publisher: {
-      "@type": "Organization",
+      "@type": "Person",
       name: "akm07",
       url: "https://akm07.dev",
     },
-    offers: {
-      "@type": "Offer",
-      price: "0",
-      priceCurrency: "USD",
-      description: "Free to use. AI refinement available for authenticated users.",
+    isPartOf: {
+      "@type": "CreativeWork",
+      name: "akm07 Portfolio",
+      url: "https://akm07.dev",
     },
     featureList: [
       "31 SQL dialect support including PostgreSQL, MySQL, SQL Server, Oracle, Snowflake, BigQuery, DuckDB, ClickHouse, Redshift, Databricks, Spark, and more",
@@ -41,29 +40,22 @@ export function JsonLd() {
       "Authenticated tier for higher limits and AI features",
       "Copy-paste workflow with keyboard shortcuts",
     ],
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: "4.8",
-      ratingCount: "150",
-    },
+    codeRepository: "https://github.com/akm07dev/sql-agnostic",
+    programmingLanguage: ["TypeScript", "Python", "SQL"],
     softwareVersion: "1.0",
-    programmingLanguage: "SQL",
     license: "https://opensource.org/licenses/MIT",
     requirements: "Modern web browser with JavaScript enabled",
   };
 
-  const organizationSchema = {
+  const personSchema = {
     "@context": "https://schema.org",
-    "@type": "Organization",
+    "@type": "Person",
     name: "akm07",
     url: "https://akm07.dev",
-    logo: {
-      "@type": "ImageObject",
-      url: "https://sql-agnostic.akm07.dev/icon.png",
-    },
+    image: "https://sql-agnostic.akm07.dev/icon.png",
     sameAs: [
-      "https://github.com/akm07",
-      "https://twitter.com/akm07",
+      "https://github.com/akm07dev",
+      "https://www.linkedin.com/in/ankitkm07/",
     ],
   };
 
@@ -73,9 +65,9 @@ export function JsonLd() {
     name: "SQLAgnostic",
     url: "https://sql-agnostic.akm07.dev",
     description:
-      "Free online SQL dialect converter supporting 31+ databases including PostgreSQL, MySQL, SQL Server, Oracle, Snowflake, BigQuery, and more.",
-    publisher: {
-      "@type": "Organization",
+      "Free online SQL converter supporting 31+ database dialects. Convert between PostgreSQL, MySQL, SQL Server, Oracle, Snowflake, BigQuery, DuckDB, ClickHouse, and more. Built with SQLGlot and AI refinement.",
+    author: {
+      "@type": "Person",
       name: "akm07",
       url: "https://akm07.dev",
     },
@@ -128,7 +120,7 @@ export function JsonLd() {
     ],
   };
 
-  const schemas = [softwareApplicationSchema, organizationSchema, websiteSchema, faqSchema];
+  const schemas = [softwareApplicationSchema, personSchema, websiteSchema, faqSchema];
 
   return (
     <Script

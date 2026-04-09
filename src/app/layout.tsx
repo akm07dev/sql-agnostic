@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "SQLAgnostic | SQL Dialect Converter for 31+ Databases",
-  description: "Convert SQL queries between PostgreSQL, MySQL, SQL Server, Oracle, Snowflake, BigQuery, DuckDB, ClickHouse, and 24 more dialects. AI-powered refinement with side-by-side diff view for database migrations, ETL pipelines, and CRUD app development.",
+  description: "Convert SQL queries between 31+ database dialects. Free online tool built with SQLGlot (MIT license) featuring AI-powered refinement, side-by-side Monaco editor, and visual diff view. Supports PostgreSQL, MySQL, SQL Server, Oracle, Snowflake, BigQuery, DuckDB, ClickHouse, and more.",
   keywords: [
     "SQL dialect converter",
     "SQL transpiler",
@@ -69,7 +69,6 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "akm07", url: "https://akm07.dev" }],
   creator: "akm07",
-  publisher: "akm07.dev",
   applicationName: "SQLAgnostic",
   generator: "Next.js",
   metadataBase: new URL("https://sql-agnostic.akm07.dev"),
@@ -89,7 +88,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "SQLAgnostic | SQL Dialect Converter for 31+ Databases",
-    description: "Convert SQL between PostgreSQL, MySQL, SQL Server, Oracle, Snowflake, BigQuery, DuckDB, and 24 more dialects. AI-powered refinement for database migrations, ETL pipelines, and CRUD apps.",
+    description: "Convert SQL between 31+ database dialects including PostgreSQL, MySQL, SQL Server, Oracle, Snowflake, BigQuery, DuckDB, ClickHouse, and more. Features AI-powered refinement, Monaco editor, and visual diff view.",
     url: "https://sql-agnostic.akm07.dev",
     siteName: "SQLAgnostic",
     locale: "en_US",
@@ -98,8 +97,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "SQLAgnostic | SQL Dialect Converter for 31+ Databases",
-    description: "Convert SQL queries between 31+ database dialects with AI-powered refinement. Perfect for migrations, ETL pipelines, and CRUD apps.",
-    creator: "@akm07",
+    description: "Convert SQL between 31+ database dialects. Features AI-powered refinement, Monaco editor, and visual diff view. Free to use.",
   },
   category: "developer tools",
   classification: "Software Application",

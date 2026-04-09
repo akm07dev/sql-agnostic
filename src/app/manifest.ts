@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "SQLAgnostic",
     short_name: "SQLAgnostic",
-    description: "SQL Dialect Converter for 31+ Databases. Convert queries between PostgreSQL, MySQL, SQL Server, Oracle, Snowflake, BigQuery, and more with AI-powered refinement.",
+    description: "Convert SQL queries between 31+ database dialects. Features deterministic transpilation, AI-powered refinement, Monaco editor, and visual diff view. Built with SQLGlot (MIT license). Free to use.",
     start_url: "/",
     display: "standalone",
     background_color: "#f8fafc",
