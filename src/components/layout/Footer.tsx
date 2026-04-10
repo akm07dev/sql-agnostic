@@ -17,8 +17,11 @@ export function Footer() {
           </span>
           Transpiler Online
         </span>
-        <span className="flex items-center gap-1.5 opacity-80 cursor-default text-center sm:text-left">
+        <span className="hidden sm:flex items-center gap-1.5 opacity-80 cursor-default text-center sm:text-left">
           Built with ❤️ by <a href={APP_LINKS.GITHUB} target="_blank" rel="noopener noreferrer" className="font-semibold text-indigo-500 hover:underline">Ankit Megotia</a> | Powered by <a href="https://github.com/tobymao/sqlglot" target="_blank" rel="noopener noreferrer" className="font-semibold text-indigo-500 hover:text-indigo-600 dark:hover:text-indigo-400 underline decoration-indigo-500/30 underline-offset-2 transition-colors">SQLGlot</a> & <a href="https://groq.com" target="_blank" rel="noopener noreferrer" className="font-semibold text-orange-500 hover:text-orange-600 dark:hover:text-orange-400 underline decoration-orange-500/30 underline-offset-2 transition-colors">Groq</a>
+        </span>
+        <span className="sm:hidden text-[10px] text-slate-400 dark:text-zinc-500 italic">
+          💻 Use desktop for best experience
         </span>
       </div>
       <div className="flex items-center gap-4 text-[11px] font-semibold tracking-tight font-mono">

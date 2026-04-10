@@ -469,15 +469,15 @@ export default function Home() {
 
       {/* AI Explanation — Console-style Output Panel */}
       {aiExplanation && (targetView === "ai" || targetView === "diff") && (
-        <div className="px-6 -mt-2 mb-10 max-w-[1700px] mx-auto w-full z-10 relative">
+        <div className="px-3 sm:px-6 -mt-2 mb-10 max-w-[1700px] mx-auto w-full z-10 relative">
           <div className="border border-slate-200 dark:border-white/10 bg-white dark:bg-zinc-900 rounded-xl overflow-hidden shadow-sm">
-            <div className="h-8 flex items-center px-4 bg-slate-100 dark:bg-zinc-800/80 border-b border-slate-200 dark:border-white/5">
+            <div className="h-8 flex items-center px-3 sm:px-4 bg-slate-100 dark:bg-zinc-800/80 border-b border-slate-200 dark:border-white/5">
               <div className="flex items-center gap-2 text-slate-500 dark:text-zinc-400 text-[11px] font-semibold tracking-wide">
                 <Sparkles className="w-3 h-3" />
                 CHANGE SUMMARY
               </div>
             </div>
-            <div className="p-4 text-[13px] text-slate-600 dark:text-zinc-400 leading-relaxed whitespace-pre-wrap font-mono">{aiExplanation}</div>
+            <div className="p-3 sm:p-4 text-[12px] sm:text-[13px] text-slate-600 dark:text-zinc-400 leading-relaxed whitespace-pre-wrap font-mono">{aiExplanation}</div>
           </div>
         </div>
       )}
@@ -486,7 +486,7 @@ export default function Home() {
       {showRefinement && (
         <>
           {/* Desktop: positioned near the center action buttons */}
-          <div className="hidden lg:block absolute left-1/2 top-[280px] -translate-x-1/2 w-[300px] border border-slate-300 dark:border-white/10 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl shadow-2xl rounded-xl z-50 animate-in slide-in-from-top-2 flex flex-col transition-colors overflow-hidden">
+          <div className="hidden lg:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] max-w-[90vw] max-h-[80vh] border border-slate-300 dark:border-white/10 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl shadow-2xl rounded-xl z-50 animate-in slide-in-from-top-2 flex flex-col transition-colors overflow-hidden">
             <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-white/[0.02]">
               <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
                 <Sparkles size={11} />
@@ -520,10 +520,10 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Mobile: bottom sheet style */}
-          <div className="lg:hidden fixed inset-0 z-50 flex items-end justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200" onClick={() => setShowRefinement(false)}>
-            <div className="w-full max-w-md mx-4 mb-4 border border-slate-300 dark:border-white/10 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl shadow-2xl rounded-xl z-50 animate-in slide-in-from-bottom-10 flex flex-col transition-colors overflow-hidden" onClick={(e) => e.stopPropagation()}>
-              <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-white/[0.02]">
+          {/* Mobile: centered modal style */}
+          <div className="lg:hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200 p-4" onClick={() => setShowRefinement(false)}>
+            <div className="w-[92vw] sm:w-[80vw] max-w-sm border border-slate-300 dark:border-white/10 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl shadow-2xl rounded-xl z-50 animate-in zoom-in-95 flex flex-col transition-colors overflow-hidden max-h-[80vh]" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-white/[0.02] shrink-0">
                 <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
                   <Sparkles size={12} />
                   <span className="text-sm font-semibold tracking-wide">Refinement Instructions</span>
@@ -532,14 +532,14 @@ export default function Home() {
                   <Minimize2 size={12} />
                 </Button>
               </div>
-              <div className="p-4 flex flex-col gap-3">
-                <div className="relative">
+              <div className="p-4 flex flex-col gap-3 overflow-hidden">
+                <div className="relative flex-1 min-h-0">
                   <Textarea
                     placeholder="e.g. Use explicit JOINs, quote all columns..."
-                    className="w-full resize-none bg-white dark:bg-black/50 border-slate-300 dark:border-white/10 focus-visible:ring-1 focus-visible:ring-indigo-500 text-sm min-h-[80px] placeholder:text-slate-400 dark:placeholder:text-zinc-600 rounded-lg shadow-inner text-slate-800 dark:text-zinc-300 pb-6"
+                    className="w-full h-full min-h-[120px] max-h-[40vh] resize-none bg-white dark:bg-black/50 border-slate-300 dark:border-white/10 focus-visible:ring-1 focus-visible:ring-indigo-500 text-sm placeholder:text-slate-400 dark:placeholder:text-zinc-600 rounded-lg shadow-inner text-slate-800 dark:text-zinc-300 pb-6"
                     value={instructions}
-                    onChange={(e) => setInstructions(e.target.value)}
-                    onKeyDown={(e) => {
+                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setInstructions(e.target.value)}
+                    onKeyDown={(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
                       if (e.key === "Enter" && !e.shiftKey) {
                         e.preventDefault();
                         if (!isRefining) handleRefineClick(instructions);
@@ -557,12 +557,12 @@ export default function Home() {
                     if (!isRefining) handleRefineClick(instructions);
                   }}
                   disabled={isRefining}
-                  className="w-full h-10 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-lg"
+                  className="w-full h-11 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-lg shrink-0"
                 >
                   {isRefining ? <Loader2 className="animate-spin w-4 h-4 mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
                   Submit
                 </Button>
-                <p className="text-[11px] text-slate-400 dark:text-zinc-600 text-center">Enter to submit · tap backdrop to close</p>
+                <p className="text-[11px] text-slate-400 dark:text-zinc-600 text-center shrink-0">Enter to submit · tap backdrop to close</p>
               </div>
             </div>
           </div>
