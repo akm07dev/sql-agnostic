@@ -2,6 +2,22 @@
 
 import { useState, useEffect } from "react";
 import { Editor, DiffEditor } from "@monaco-editor/react";
+
+// Hook to detect if device is mobile/tablet
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => {
+      const mobile = window.innerWidth < 1024 || 
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      setIsMobile(mobile);
+    };
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
+  return isMobile;
+}
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectGroup, SelectLabel, SelectSeparator } from "@/components/ui/select";
@@ -161,6 +177,54 @@ export default function Home() {
     return all.find(d => d.value === value);
   };
 
+  // Mobile-optimized Monaco editor wrapper
+  function MobileAdaptiveEditor({ value, onChange, isDark }: { 
+    value: string; 
+    onChange: (v: string) => void; 
+    isDark: boolean;
+  }) {
+    const isMobile = useIsMobile();
+    
+    return (
+      <Editor
+        height="100%"
+        language="sql"
+        theme={isDark ? "vs-dark" : "vs-light"}
+        value={value}
+        onChange={(v) => onChange(v || "")}
+        options={{
+          minimap: { enabled: false },
+          fontSize: isMobile ? 16 : 13, // Larger font on mobile for readability
+          fontFamily: "var(--font-geist-mono), monospace",
+          scrollBeyondLastLine: false,
+          lineHeight: isMobile ? 28 : 24,
+          padding: { top: 20 },
+          quickSuggestions: false,
+          renderLineHighlight: "all",
+          cursorBlinking: "smooth",
+          cursorSmoothCaretAnimation: "on",
+          automaticLayout: true,
+          // Mobile-specific optimizations
+          lineNumbers: isMobile ? "off" : "on",
+          folding: !isMobile,
+          contextmenu: false, // Disable right-click menu that blocks touch
+          scrollbar: {
+            vertical: "auto",
+            horizontal: "auto",
+            useShadows: false,
+            verticalHasArrows: false,
+            horizontalHasArrows: false,
+          },
+          overviewRulerLanes: 0,
+          hideCursorInOverviewRuler: true,
+          domReadOnly: false,
+          readOnly: false,
+          fixedOverflowWidgets: true,
+        }}
+      />
+    );
+  }
+
   return (
     <div className="flex flex-col min-h-screen w-full bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-300 font-sans relative selection:bg-indigo-200 dark:selection:bg-indigo-500/30 transition-colors duration-500">
       <JsonLd />
@@ -226,7 +290,7 @@ export default function Home() {
       <div className="flex-1 flex flex-col lg:flex-row p-6 pt-4 gap-6 relative z-10 max-w-[1700px] mx-auto w-full">
 
         {/* SOURCE PANE */}
-        <div className="flex-1 flex flex-col min-w-0 h-[50vh] lg:h-auto lg:min-h-[70vh] bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl shadow-black/5 dark:shadow-black/40 overflow-hidden group">
+        <div className="flex-1 flex flex-col min-w-0 h-[85vh] lg:h-auto lg:min-h-[70vh] bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl shadow-black/5 dark:shadow-black/40 overflow-hidden group">
           {/* Pane Toolbar */}
           <div className="h-12 flex items-center px-4 border-b border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-zinc-900/50 shrink-0 justify-between">
             <div className="flex items-center gap-2">
@@ -258,25 +322,10 @@ export default function Home() {
           {/* Editor Container */}
           <div className="flex-1 relative min-h-0 bg-white dark:bg-black/20">
             <div className="absolute top-3 right-5 z-10 opacity-30 text-[10px] font-mono text-slate-400 dark:text-zinc-500 pointer-events-none select-none tracking-widest">INPUT</div>
-            <Editor
-              height="100%"
-              language="sql"
-              theme={isDark ? "vs-dark" : "vs-light"}
-              value={sourceCode}
-              onChange={(value) => setSourceCode(value || "")}
-              options={{
-                minimap: { enabled: false },
-                fontSize: 13,
-                fontFamily: "var(--font-geist-mono), monospace",
-                scrollBeyondLastLine: false,
-                lineHeight: 24,
-                padding: { top: 20 },
-                quickSuggestions: false,
-                renderLineHighlight: "all",
-                cursorBlinking: "smooth",
-                cursorSmoothCaretAnimation: "on",
-                automaticLayout: true
-              }}
+            <MobileAdaptiveEditor 
+              value={sourceCode} 
+              onChange={setSourceCode} 
+              isDark={isDark} 
             />
           </div>
 
@@ -321,7 +370,7 @@ export default function Home() {
         </div>
 
         {/* TARGET PANE */}
-        <div className="flex-1 flex flex-col min-w-0 h-[50vh] lg:h-auto lg:min-h-[70vh] bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl shadow-black/5 dark:shadow-black/40 overflow-hidden relative group">
+        <div className="flex-1 flex flex-col min-w-0 h-[85vh] lg:h-auto lg:min-h-[70vh] bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl shadow-black/5 dark:shadow-black/40 overflow-hidden relative group">
           {/* Pane Toolbar */}
           <div className="h-12 flex items-center px-4 border-b border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-zinc-900/50 shrink-0 justify-between">
             <div className="flex items-center gap-2">
@@ -453,8 +502,8 @@ export default function Home() {
                   placeholder="e.g. Use explicit JOINs, quote all columns..."
                   className="w-full resize-none bg-white dark:bg-black/50 border-slate-300 dark:border-white/10 focus-visible:ring-1 focus-visible:ring-indigo-500 text-sm min-h-[60px] placeholder:text-slate-400 dark:placeholder:text-zinc-600 rounded-lg shadow-inner text-slate-800 dark:text-zinc-300 pb-5"
                   value={instructions}
-                  onChange={(e) => setInstructions(e.target.value)}
-                  onKeyDown={(e) => {
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setInstructions(e.target.value)}
+                  onKeyDown={(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
                     if (e.key === "Enter" && !e.shiftKey) {
                       e.preventDefault();
                       if (!isRefining) handleRefineClick(instructions);
