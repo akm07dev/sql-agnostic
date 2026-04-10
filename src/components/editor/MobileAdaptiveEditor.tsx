@@ -33,7 +33,7 @@ export function MobileAdaptiveEditor({ value, onChange, isDark }: MobileAdaptive
         automaticLayout: true,
         lineNumbers: isMobile ? "off" : "on",
         folding: !isMobile,
-        contextmenu: false,
+        contextmenu: true,
         scrollbar: {
           vertical: "auto",
           horizontal: "auto",
@@ -43,9 +43,16 @@ export function MobileAdaptiveEditor({ value, onChange, isDark }: MobileAdaptive
         },
         overviewRulerLanes: 0,
         hideCursorInOverviewRuler: true,
-        domReadOnly: false,
         readOnly: false,
         fixedOverflowWidgets: true,
+        // Mobile-specific settings to enable input
+        links: false,
+        occurrencesHighlight: "off",
+        selectionHighlight: false,
+        matchBrackets: "never",
+        parameterHints: { enabled: false },
+        hover: { enabled: false },
+        wordWrap: "on",
       }}
     />
   );

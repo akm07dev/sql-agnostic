@@ -14,6 +14,7 @@ import { Footer } from "@/components/layout/Footer";
 import { STORAGE_KEYS } from "@/lib/constants";
 import { useAuth } from "@/hooks/useAuth";
 import { useSql } from "@/hooks/useSql";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { MobileAdaptiveEditor } from "@/components/editor/MobileAdaptiveEditor";
 import { JsonLd } from "@/components/seo/JsonLd";
 
@@ -106,6 +107,7 @@ export default function Home() {
 
   const { theme, systemTheme } = useTheme();
   const { popular, other } = getCategorizedDialects();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const savedSource = localStorage.getItem(STORAGE_KEYS.SOURCE_DIALECT) as SqlDialect;
@@ -163,7 +165,7 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen w-full bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-300 font-sans relative selection:bg-indigo-200 dark:selection:bg-indigo-500/30 transition-colors duration-500">
+    <div className="flex flex-col min-h-screen w-full bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-300 font-sans relative selection:bg-indigo-200 dark:selection:bg-indigo-500/30 transition-colors duration-500 overflow-x-hidden">
       <JsonLd />
 
       {/* Background decorations - isolated in overflow-hidden container */}
@@ -186,7 +188,7 @@ export default function Home() {
             localStorage.setItem(STORAGE_KEYS.SOURCE_DIALECT, newSource);
           }
         }}>
-          <SelectTrigger className="w-[210px] h-[36px] border border-slate-300 dark:border-white/10 bg-white dark:bg-zinc-900 text-sm font-semibold rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500/50 dark:focus:ring-indigo-500/40">
+          <SelectTrigger className="w-[180px] h-[36px] border border-slate-300 dark:border-white/10 bg-white dark:bg-zinc-900 text-sm font-semibold rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500/50 dark:focus:ring-indigo-500/40">
             <span className="flex items-center gap-2 truncate">
               <DialectIcon icon={getDialect(sourceDialect)?.icon ?? ""} className="w-4 h-4 shrink-0" />
               {getDialect(sourceDialect)?.label || sourceDialect}
@@ -211,7 +213,7 @@ export default function Home() {
             localStorage.setItem(STORAGE_KEYS.TARGET_DIALECT, newTarget);
           }
         }}>
-          <SelectTrigger className="w-[210px] h-[36px] border border-indigo-200 dark:border-indigo-500/20 bg-indigo-50/50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 text-sm font-semibold rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500/50">
+          <SelectTrigger className="w-[180px] h-[36px] border border-indigo-200 dark:border-indigo-500/20 bg-indigo-50/50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 text-sm font-semibold rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500/50">
             <span className="flex items-center gap-2 truncate">
               <DialectIcon icon={getDialect(targetDialect)?.icon ?? ""} className="w-4 h-4 shrink-0" />
               {getDialect(targetDialect)?.label || targetDialect}
@@ -224,10 +226,10 @@ export default function Home() {
       </div>
 
       {/* Main Dual-Pane Environment */}
-      <div className="flex-1 flex flex-col lg:flex-row p-6 pt-4 gap-6 relative z-10 max-w-[1700px] mx-auto w-full">
+      <div className="flex-1 flex flex-col lg:flex-row p-4 sm:p-6 pt-2 sm:pt-4 gap-4 sm:gap-6 relative z-10 max-w-[1700px] mx-auto w-full min-h-0">
 
         {/* SOURCE PANE */}
-        <div className="flex-1 flex flex-col min-w-0 h-[85vh] lg:h-auto lg:min-h-[70vh] bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl shadow-black/5 dark:shadow-black/40 overflow-hidden group">
+        <div className="flex-1 flex flex-col min-w-0 h-[60vh] sm:h-[70vh] lg:h-auto lg:min-h-[70vh] bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl shadow-black/5 dark:shadow-black/40 overflow-hidden group shrink-0 lg:shrink">
           {/* Pane Toolbar */}
           <div className="h-12 flex items-center px-4 border-b border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-zinc-900/50 shrink-0 justify-between">
             <div className="flex items-center gap-2">
@@ -307,7 +309,7 @@ export default function Home() {
         </div>
 
         {/* TARGET PANE */}
-        <div className="flex-1 flex flex-col min-w-0 h-[85vh] lg:h-auto lg:min-h-[70vh] bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl shadow-black/5 dark:shadow-black/40 overflow-hidden relative group">
+        <div className="flex-1 flex flex-col min-w-0 h-[60vh] sm:h-[70vh] lg:h-auto lg:min-h-[70vh] bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl shadow-black/5 dark:shadow-black/40 overflow-hidden relative group shrink-0 lg:shrink">
           {/* Pane Toolbar */}
           <div className="h-12 flex items-center px-4 border-b border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-zinc-900/50 shrink-0 justify-between">
             <div className="flex items-center gap-2">
@@ -376,7 +378,10 @@ export default function Home() {
                   lineHeight: 24,
                   padding: { top: 20 },
                   renderLineHighlight: "none",
-                  automaticLayout: true
+                  automaticLayout: true,
+                  lineNumbers: isMobile ? "off" : "on",
+                  contextmenu: true,
+                  wordWrap: isMobile ? "on" : "off",
                 }}
               />
             ) : (
@@ -394,7 +399,10 @@ export default function Home() {
                   lineHeight: 24,
                   padding: { top: 20 },
                   renderLineHighlight: "none",
-                  automaticLayout: true
+                  automaticLayout: true,
+                  lineNumbers: isMobile ? "off" : "on",
+                  contextmenu: true,
+                  wordWrap: isMobile ? "on" : "off",
                 }}
               />
             )}
@@ -406,7 +414,7 @@ export default function Home() {
 
       {/* AI Explanation — Console-style Output Panel */}
       {aiExplanation && (targetView === "ai" || targetView === "diff") && (
-        <div className="px-3 sm:px-6 -mt-2 mb-10 max-w-[1700px] mx-auto w-full z-10 relative">
+        <div className="px-3 sm:px-6 mt-4 mb-6 max-w-[1700px] mx-auto w-full z-10 relative shrink-0">
           <div className="border border-slate-200 dark:border-white/10 bg-white dark:bg-zinc-900 rounded-xl overflow-hidden shadow-sm">
             <div className="h-8 flex items-center px-3 sm:px-4 bg-slate-100 dark:bg-zinc-800/80 border-b border-slate-200 dark:border-white/5">
               <div className="flex items-center gap-2 text-slate-500 dark:text-zinc-400 text-[11px] font-semibold tracking-wide">
@@ -414,7 +422,7 @@ export default function Home() {
                 CHANGE SUMMARY
               </div>
             </div>
-            <div className="p-3 sm:p-4 text-[12px] sm:text-[13px] text-slate-600 dark:text-zinc-400 leading-relaxed whitespace-pre-wrap font-mono">{aiExplanation}</div>
+            <div className="p-3 sm:p-4 text-[12px] sm:text-[13px] text-slate-600 dark:text-zinc-400 leading-relaxed whitespace-pre-wrap font-mono max-h-[30vh] overflow-y-auto">{aiExplanation}</div>
           </div>
         </div>
       )}
