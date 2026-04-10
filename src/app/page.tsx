@@ -2,22 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { Editor, DiffEditor } from "@monaco-editor/react";
-
-// Hook to detect if device is mobile/tablet
-function useIsMobile() {
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const check = () => {
-      const mobile = window.innerWidth < 1024 || 
-        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      setIsMobile(mobile);
-    };
-    check();
-    window.addEventListener('resize', check);
-    return () => window.removeEventListener('resize', check);
-  }, []);
-  return isMobile;
-}
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectGroup, SelectLabel, SelectSeparator } from "@/components/ui/select";
@@ -30,6 +14,7 @@ import { Footer } from "@/components/layout/Footer";
 import { STORAGE_KEYS } from "@/lib/constants";
 import { useAuth } from "@/hooks/useAuth";
 import { useSql } from "@/hooks/useSql";
+import { MobileAdaptiveEditor } from "@/components/editor/MobileAdaptiveEditor";
 import { JsonLd } from "@/components/seo/JsonLd";
 
 const DialectIcon = ({ icon, className = "w-4 h-4" }: { icon: string; className?: string }) => (
@@ -176,54 +161,6 @@ export default function Home() {
     const all = [...popular, ...other];
     return all.find(d => d.value === value);
   };
-
-  // Mobile-optimized Monaco editor wrapper
-  function MobileAdaptiveEditor({ value, onChange, isDark }: { 
-    value: string; 
-    onChange: (v: string) => void; 
-    isDark: boolean;
-  }) {
-    const isMobile = useIsMobile();
-    
-    return (
-      <Editor
-        height="100%"
-        language="sql"
-        theme={isDark ? "vs-dark" : "vs-light"}
-        value={value}
-        onChange={(v) => onChange(v || "")}
-        options={{
-          minimap: { enabled: false },
-          fontSize: isMobile ? 16 : 13, // Larger font on mobile for readability
-          fontFamily: "var(--font-geist-mono), monospace",
-          scrollBeyondLastLine: false,
-          lineHeight: isMobile ? 28 : 24,
-          padding: { top: 20 },
-          quickSuggestions: false,
-          renderLineHighlight: "all",
-          cursorBlinking: "smooth",
-          cursorSmoothCaretAnimation: "on",
-          automaticLayout: true,
-          // Mobile-specific optimizations
-          lineNumbers: isMobile ? "off" : "on",
-          folding: !isMobile,
-          contextmenu: false, // Disable right-click menu that blocks touch
-          scrollbar: {
-            vertical: "auto",
-            horizontal: "auto",
-            useShadows: false,
-            verticalHasArrows: false,
-            horizontalHasArrows: false,
-          },
-          overviewRulerLanes: 0,
-          hideCursorInOverviewRuler: true,
-          domReadOnly: false,
-          readOnly: false,
-          fixedOverflowWidgets: true,
-        }}
-      />
-    );
-  }
 
   return (
     <div className="flex flex-col min-h-screen w-full bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-300 font-sans relative selection:bg-indigo-200 dark:selection:bg-indigo-500/30 transition-colors duration-500">
