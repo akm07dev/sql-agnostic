@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Editor, DiffEditor } from "@monaco-editor/react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectGroup, SelectLabel, SelectSeparator } from "@/components/ui/select";
@@ -15,7 +14,8 @@ import { STORAGE_KEYS } from "@/lib/constants";
 import { useAuth } from "@/hooks/useAuth";
 import { useSql } from "@/hooks/useSql";
 import { useIsMobile } from "@/hooks/useIsMobile";
-import { MobileAdaptiveEditor } from "@/components/editor/MobileAdaptiveEditor";
+import { AdaptiveEditor } from "@/components/editor/AdaptiveEditor";
+import { DiffEditor } from "@monaco-editor/react";
 import { JsonLd } from "@/components/seo/JsonLd";
 
 const DialectIcon = ({ icon, className = "w-4 h-4" }: { icon: string; className?: string }) => (
@@ -108,6 +108,7 @@ export default function Home() {
   const { theme, systemTheme } = useTheme();
   const { popular, other } = getCategorizedDialects();
   const isMobile = useIsMobile();
+  const effectiveTargetView = isMobile && targetView === "diff" ? "ai" : targetView;
 
   useEffect(() => {
     const savedSource = localStorage.getItem(STORAGE_KEYS.SOURCE_DIALECT) as SqlDialect;
@@ -261,7 +262,7 @@ export default function Home() {
           {/* Editor Container */}
           <div className="flex-1 relative min-h-0 bg-white dark:bg-black/20">
             <div className="absolute top-3 right-5 z-10 opacity-30 text-[10px] font-mono text-slate-400 dark:text-zinc-500 pointer-events-none select-none tracking-widest">INPUT</div>
-            <MobileAdaptiveEditor 
+            <AdaptiveEditor 
               value={sourceCode} 
               onChange={setSourceCode} 
               isDark={isDark} 
@@ -406,7 +407,9 @@ export default function Home() {
                 <div className="flex ml-2 md:ml-4 gap-0.5 p-0.5 bg-slate-200/70 dark:bg-black/40 rounded-md border border-slate-300/50 dark:border-white/5">
                   <button onClick={() => setTargetView('sqlglot')} className={`px-2.5 py-1 text-[11px] font-semibold rounded-sm transition-all ${targetView === 'sqlglot' ? 'bg-white dark:bg-zinc-800 shadow-sm text-slate-800 dark:text-zinc-200' : 'text-slate-500 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-zinc-300'}`}>Transpiler</button>
                   <button onClick={() => setTargetView('ai')} className={`px-2.5 py-1 text-[11px] font-semibold rounded-sm transition-all ${targetView === 'ai' ? 'bg-white dark:bg-zinc-800 shadow-sm text-slate-800 dark:text-zinc-200' : 'text-slate-500 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-zinc-300'}`}>AI Refined</button>
-                  <button onClick={() => setTargetView('diff')} className={`px-2.5 py-1 text-[11px] font-semibold rounded-sm transition-all ${targetView === 'diff' ? 'bg-white dark:bg-zinc-800 shadow-sm text-slate-800 dark:text-zinc-200' : 'text-slate-500 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-zinc-300'}`}>Diff</button>
+                  {!isMobile && (
+                    <button onClick={() => setTargetView('diff')} className={`px-2.5 py-1 text-[11px] font-semibold rounded-sm transition-all ${targetView === 'diff' ? 'bg-white dark:bg-zinc-800 shadow-sm text-slate-800 dark:text-zinc-200' : 'text-slate-500 dark:text-zinc-500 hover:text-slate-700 dark:hover:text-zinc-300'}`}>Diff</button>
+                  )}
                 </div>
               )}
             </div>
@@ -414,18 +417,18 @@ export default function Home() {
             <div className="flex items-center gap-1.5">
               <Button
                 onClick={() => {
-                  if (targetView === "diff") {
+                  if (effectiveTargetView === "diff") {
                     const combined = `-- SQLGlot Output\n${targetCode}\n\n-- AI Refined Output\n${aiRefinedCode}`;
                     copyToClipboard(combined, setTargetCopied);
                   } else {
-                    copyToClipboard(targetView === "ai" ? aiRefinedCode : targetCode, setTargetCopied);
+                    copyToClipboard(effectiveTargetView === "ai" ? aiRefinedCode : targetCode, setTargetCopied);
                   }
                 }}
                 disabled={!targetCode}
                 variant="ghost"
                 size="icon"
                 className="h-7 w-7 text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-white/5 disabled:opacity-30 rounded-sm transition-colors"
-                title={targetView === "diff" ? "Copy Both Queries" : "Copy Target SQL"}
+                title={effectiveTargetView === "diff" ? "Copy Both Queries" : "Copy Target SQL"}
               >
                 {targetCopied ? <Check size={13} className="text-green-500" /> : <Copy size={13} />}
               </Button>
@@ -445,9 +448,9 @@ export default function Home() {
           {/* Editor Container */}
           <div className="flex-1 relative min-h-0 bg-slate-50/50 dark:bg-black/20">
             <div className="absolute top-3 right-5 z-10 opacity-30 text-[10px] font-mono text-slate-400 dark:text-zinc-500 pointer-events-none select-none tracking-widest">
-              {targetView === "diff" ? "AI DIFF" : targetView === "ai" ? "AI OUTPUT" : "TRANSPILER OUTPUT"}
+              {effectiveTargetView === "diff" ? "AI DIFF" : effectiveTargetView === "ai" ? "AI OUTPUT" : "TRANSPILER OUTPUT"}
             </div>
-            {targetView === "diff" ? (
+            {effectiveTargetView === "diff" ? (
               <DiffEditor
                 height="100%"
                 language="sql"
@@ -470,25 +473,11 @@ export default function Home() {
                 }}
               />
             ) : (
-              <Editor
-                height="100%"
-                language="sql"
-                theme={isDark ? "vs-dark" : "vs-light"}
-                value={targetView === "ai" ? aiRefinedCode : targetCode}
-                options={{
-                  readOnly: true,
-                  minimap: { enabled: false },
-                  fontSize: 13,
-                  fontFamily: "var(--font-geist-mono), monospace",
-                  scrollBeyondLastLine: false,
-                  lineHeight: 24,
-                  padding: { top: 20 },
-                  renderLineHighlight: "none",
-                  automaticLayout: true,
-                  lineNumbers: isMobile ? "off" : "on",
-                  contextmenu: true,
-                  wordWrap: isMobile ? "on" : "off",
-                }}
+              <AdaptiveEditor
+                value={effectiveTargetView === "ai" ? aiRefinedCode : targetCode}
+                onChange={() => {}} // Read-only
+                isDark={isDark}
+                readOnly={true}
               />
             )}
           </div>
@@ -498,7 +487,7 @@ export default function Home() {
       </div>
 
       {/* AI Explanation — Console-style Output Panel */}
-      {aiExplanation && (targetView === "ai" || targetView === "diff") && (
+      {aiExplanation && (effectiveTargetView === "ai" || effectiveTargetView === "diff") && (
         <div className="px-3 sm:px-6 mt-4 mb-6 max-w-[1700px] mx-auto w-full z-10 relative shrink-0">
           <div className="border border-slate-200 dark:border-white/10 bg-white dark:bg-zinc-900 rounded-xl overflow-hidden shadow-sm">
             <div className="h-8 flex items-center px-3 sm:px-4 bg-slate-100 dark:bg-zinc-800/80 border-b border-slate-200 dark:border-white/5">
