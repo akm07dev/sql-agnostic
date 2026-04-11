@@ -154,7 +154,11 @@ function LoginForm() {
             className="w-full h-11 bg-slate-900 dark:bg-indigo-600 hover:bg-slate-800 dark:hover:bg-indigo-500 text-white dark:text-white shadow-md font-semibold transition-all mt-2"
             disabled={loading}
           >
-            {mode === "signin" ? "Sign In" : "Create Account"}
+            {loading ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              mode === "signin" ? "Sign In" : "Create Account"
+            )}
           </Button>
         </form>
 
