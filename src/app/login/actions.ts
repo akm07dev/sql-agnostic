@@ -8,7 +8,7 @@ export async function signUp(formData: FormData) {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
   const supabase = await createClient();
-  const origin = (await headers()).get("origin");
+  const origin = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
   const { error } = await supabase.auth.signUp({
     email,
@@ -51,7 +51,7 @@ export async function signOut() {
 export async function resetPassword(formData: FormData) {
   const email = formData.get("email") as string;
   const supabase = await createClient();
-  const origin = (await headers()).get("origin");
+  const origin = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
   // Changed the redirectTo URL to point to the callback, 
   // and added ?next=/login/update-password

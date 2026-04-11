@@ -52,6 +52,7 @@ All environment variables are in `.env.local` at the project root. Both Next.js 
 NEXT_PUBLIC_SUPABASE_URL
 NEXT_PUBLIC_SUPABASE_ANON_KEY
 GROQ_API_KEY
+NEXT_PUBLIC_SITE_URL
 ```
 
 ## Common Tasks
