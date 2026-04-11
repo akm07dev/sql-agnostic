@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { resetPassword } from "../actions";
 import { Button } from "@/components/ui/button";
@@ -10,9 +10,14 @@ import { AlertCircle, CheckCircle2, ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 
 function ResetPasswordForm() {
+  const [loading, setLoading] = useState(false);
   const searchParams = useSearchParams();
   const message = searchParams.get("message");
   const messageType = searchParams.get("type") || "error";
+
+  const handleSubmit = async () => {
+    setLoading(true);
+  };
 
   return (
     <div className="flex flex-col min-h-screen h-full w-full bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-300 font-sans items-center justify-center relative selection:bg-indigo-200 dark:selection:bg-indigo-500/30 transition-colors duration-500">
@@ -73,8 +78,14 @@ function ResetPasswordForm() {
             type="submit"
             formAction={resetPassword}
             className="w-full h-11 bg-slate-900 dark:bg-indigo-600 hover:bg-slate-800 dark:hover:bg-indigo-500 text-white dark:text-white shadow-md font-semibold transition-all mt-2"
+            disabled={loading}
+            onClick={handleSubmit}
           >
-            Send Reset Link
+            {loading ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              "Send Reset Link"
+            )}
           </Button>
         </form>
 

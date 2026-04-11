@@ -305,8 +305,93 @@ export default function Home() {
               {isRefining ? <Loader2 className="animate-spin w-5 h-5 lg:w-5 lg:h-5" /> : <Sparkles className="w-5 h-5 lg:w-5 lg:h-5" />}
             </Button>
 
+            {/* AI Refinement Popup - Desktop only, positioned below button */}
+            {showRefinement && (
+              <div className="hidden lg:block absolute left-1/2 top-full mt-3 -translate-x-1/2 w-[300px] max-w-[90vw] max-h-[80vh] border border-slate-300 dark:border-white/10 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl shadow-2xl rounded-xl z-50 animate-in slide-in-from-top-2 flex flex-col transition-colors overflow-hidden">
+                <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-white/[0.02]">
+                  <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
+                    <Sparkles size={11} />
+                    <span className="text-[11px] font-semibold tracking-wide">Refinement Instructions</span>
+                  </div>
+                  <Button variant="ghost" size="icon" className="h-5 w-5 text-slate-500 dark:text-zinc-500 hover:text-slate-800 dark:hover:text-white rounded-md transition-colors" onClick={() => setShowRefinement(false)}>
+                    <Minimize2 size={11} />
+                  </Button>
+                </div>
+                <div className="p-3 flex flex-col gap-2">
+                  <div className="relative">
+                    <Textarea
+                      placeholder="e.g. Use explicit JOINs, quote all columns..."
+                      className="w-full resize-none bg-white dark:bg-black/50 border-slate-300 dark:border-white/10 focus-visible:ring-1 focus-visible:ring-indigo-500 text-sm min-h-[60px] placeholder:text-slate-400 dark:placeholder:text-zinc-600 rounded-lg shadow-inner text-slate-800 dark:text-zinc-300 pb-5"
+                      value={instructions}
+                      onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setInstructions(e.target.value)}
+                      onKeyDown={(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          if (!isRefining) handleRefineClick(instructions);
+                        }
+                      }}
+                      maxLength={150}
+                      autoFocus
+                    />
+                    <div className="absolute bottom-1.5 right-2.5 text-[9px] font-medium text-slate-400 dark:text-zinc-600 pointer-events-none select-none">
+                      {instructions.length}/150
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-slate-400 dark:text-zinc-600 text-center">Enter to submit · double-click ✨ to skip</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
+
+        {/* AI Refinement Popup - Mobile only, fixed position */}
+        {showRefinement && (
+          <div className="lg:hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200 p-4" onClick={() => setShowRefinement(false)}>
+            <div className="w-[92vw] sm:w-[80vw] max-w-sm border border-slate-300 dark:border-white/10 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl shadow-2xl rounded-xl z-50 animate-in zoom-in-95 flex flex-col transition-colors overflow-hidden max-h-[80vh]" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-white/[0.02] shrink-0">
+                <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
+                  <Sparkles size={12} />
+                  <span className="text-sm font-semibold tracking-wide">Refinement Instructions</span>
+                </div>
+                <Button variant="ghost" size="icon" className="h-6 w-6 text-slate-500 dark:text-zinc-500 hover:text-slate-800 dark:hover:text-white rounded-md transition-colors" onClick={() => setShowRefinement(false)}>
+                  <Minimize2 size={12} />
+                </Button>
+              </div>
+              <div className="p-4 flex flex-col gap-3 overflow-hidden">
+                <div className="relative flex-1 min-h-0">
+                  <Textarea
+                    placeholder="e.g. Use explicit JOINs, quote all columns..."
+                    className="w-full h-full min-h-[120px] max-h-[40vh] resize-none bg-white dark:bg-black/50 border-slate-300 dark:border-white/10 focus-visible:ring-1 focus-visible:ring-indigo-500 text-sm placeholder:text-slate-400 dark:placeholder:text-zinc-600 rounded-lg shadow-inner text-slate-800 dark:text-zinc-300 pb-6"
+                    value={instructions}
+                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setInstructions(e.target.value)}
+                    onKeyDown={(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        if (!isRefining) handleRefineClick(instructions);
+                      }
+                    }}
+                    maxLength={150}
+                    autoFocus
+                  />
+                  <div className="absolute bottom-2 right-3 text-[10px] font-medium text-slate-400 dark:text-zinc-600 pointer-events-none select-none">
+                    {instructions.length}/150
+                  </div>
+                </div>
+                <Button
+                  onClick={() => {
+                    if (!isRefining) handleRefineClick(instructions);
+                  }}
+                  disabled={isRefining}
+                  className="w-full h-11 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-lg shrink-0"
+                >
+                  {isRefining ? <Loader2 className="animate-spin w-4 h-4 mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
+                  Submit
+                </Button>
+                <p className="text-[11px] text-slate-400 dark:text-zinc-600 text-center shrink-0">Enter to submit · tap backdrop to close</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* TARGET PANE */}
         <div className="flex-1 flex flex-col min-w-0 h-[60vh] sm:h-[70vh] lg:h-auto lg:min-h-[70vh] bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl shadow-black/5 dark:shadow-black/40 overflow-hidden relative group shrink-0 lg:shrink">
@@ -425,93 +510,6 @@ export default function Home() {
             <div className="p-3 sm:p-4 text-[12px] sm:text-[13px] text-slate-600 dark:text-zinc-400 leading-relaxed whitespace-pre-wrap font-mono max-h-[30vh] overflow-y-auto">{aiExplanation}</div>
           </div>
         </div>
-      )}
-
-      {/* AI Refinement Popup - Shared between mobile and desktop */}
-      {showRefinement && (
-        <>
-          {/* Desktop: positioned near the center action buttons */}
-          <div className="hidden lg:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] max-w-[90vw] max-h-[80vh] border border-slate-300 dark:border-white/10 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl shadow-2xl rounded-xl z-50 animate-in slide-in-from-top-2 flex flex-col transition-colors overflow-hidden">
-            <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-white/[0.02]">
-              <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
-                <Sparkles size={11} />
-                <span className="text-[11px] font-semibold tracking-wide">Refinement Instructions</span>
-              </div>
-              <Button variant="ghost" size="icon" className="h-5 w-5 text-slate-500 dark:text-zinc-500 hover:text-slate-800 dark:hover:text-white rounded-md transition-colors" onClick={() => setShowRefinement(false)}>
-                <Minimize2 size={11} />
-              </Button>
-            </div>
-            <div className="p-3 flex flex-col gap-2">
-              <div className="relative">
-                <Textarea
-                  placeholder="e.g. Use explicit JOINs, quote all columns..."
-                  className="w-full resize-none bg-white dark:bg-black/50 border-slate-300 dark:border-white/10 focus-visible:ring-1 focus-visible:ring-indigo-500 text-sm min-h-[60px] placeholder:text-slate-400 dark:placeholder:text-zinc-600 rounded-lg shadow-inner text-slate-800 dark:text-zinc-300 pb-5"
-                  value={instructions}
-                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setInstructions(e.target.value)}
-                  onKeyDown={(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      if (!isRefining) handleRefineClick(instructions);
-                    }
-                  }}
-                  maxLength={150}
-                  autoFocus
-                />
-                <div className="absolute bottom-1.5 right-2.5 text-[9px] font-medium text-slate-400 dark:text-zinc-600 pointer-events-none select-none">
-                  {instructions.length}/150
-                </div>
-              </div>
-              <p className="text-[10px] text-slate-400 dark:text-zinc-600 text-center">Enter to submit · double-click ✨ to skip</p>
-            </div>
-          </div>
-
-          {/* Mobile: centered modal style */}
-          <div className="lg:hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200 p-4" onClick={() => setShowRefinement(false)}>
-            <div className="w-[92vw] sm:w-[80vw] max-w-sm border border-slate-300 dark:border-white/10 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl shadow-2xl rounded-xl z-50 animate-in zoom-in-95 flex flex-col transition-colors overflow-hidden max-h-[80vh]" onClick={(e) => e.stopPropagation()}>
-              <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-white/[0.02] shrink-0">
-                <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
-                  <Sparkles size={12} />
-                  <span className="text-sm font-semibold tracking-wide">Refinement Instructions</span>
-                </div>
-                <Button variant="ghost" size="icon" className="h-6 w-6 text-slate-500 dark:text-zinc-500 hover:text-slate-800 dark:hover:text-white rounded-md transition-colors" onClick={() => setShowRefinement(false)}>
-                  <Minimize2 size={12} />
-                </Button>
-              </div>
-              <div className="p-4 flex flex-col gap-3 overflow-hidden">
-                <div className="relative flex-1 min-h-0">
-                  <Textarea
-                    placeholder="e.g. Use explicit JOINs, quote all columns..."
-                    className="w-full h-full min-h-[120px] max-h-[40vh] resize-none bg-white dark:bg-black/50 border-slate-300 dark:border-white/10 focus-visible:ring-1 focus-visible:ring-indigo-500 text-sm placeholder:text-slate-400 dark:placeholder:text-zinc-600 rounded-lg shadow-inner text-slate-800 dark:text-zinc-300 pb-6"
-                    value={instructions}
-                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setInstructions(e.target.value)}
-                    onKeyDown={(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-                      if (e.key === "Enter" && !e.shiftKey) {
-                        e.preventDefault();
-                        if (!isRefining) handleRefineClick(instructions);
-                      }
-                    }}
-                    maxLength={150}
-                    autoFocus
-                  />
-                  <div className="absolute bottom-2 right-3 text-[10px] font-medium text-slate-400 dark:text-zinc-600 pointer-events-none select-none">
-                    {instructions.length}/150
-                  </div>
-                </div>
-                <Button
-                  onClick={() => {
-                    if (!isRefining) handleRefineClick(instructions);
-                  }}
-                  disabled={isRefining}
-                  className="w-full h-11 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-lg shrink-0"
-                >
-                  {isRefining ? <Loader2 className="animate-spin w-4 h-4 mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
-                  Submit
-                </Button>
-                <p className="text-[11px] text-slate-400 dark:text-zinc-600 text-center shrink-0">Enter to submit · tap backdrop to close</p>
-              </div>
-            </div>
-          </div>
-        </>
       )}
 
       <Footer />
