@@ -198,6 +198,16 @@ app = FastAPI(docs_url=None, redoc_url=None)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+# CORS middleware
+site_url = os.getenv("NEXT_PUBLIC_SITE_URL", "http://localhost:3000")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", site_url],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["*"],
+)
+
 groq_client = Groq(api_key=os.getenv("GROQ_API_KEY", "dummy"))
 
 # ---------------------------------------------------------------------------
