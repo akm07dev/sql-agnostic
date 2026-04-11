@@ -5,7 +5,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectGroup, SelectLabel, SelectSeparator } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeftRight, Sparkles, ThumbsDown, ThumbsUp, Loader2, ChevronRight, Minimize2, Copy, Check, ClipboardPaste } from "lucide-react";
+import { ArrowLeftRight, Sparkles, ThumbsDown, ThumbsUp, Loader2, ChevronRight, Minimize2, Copy, Check, ClipboardPaste, Lock } from "lucide-react";
 import { getCategorizedDialects, type SqlDialect } from "@/lib/dialects";
 import { useTheme } from "next-themes";
 import { Navbar } from "@/components/layout/Navbar";
@@ -66,6 +66,10 @@ export default function Home() {
   const [sourceCopied, setSourceCopied] = useState(false);
   const [targetCopied, setTargetCopied] = useState(false);
   const [sourcePasted, setSourcePasted] = useState(false);
+  const [transpiledOnce, setTranspiledOnce] = useState(false);
+  const [cooldownTime, setCooldownTime] = useState(0);
+  const [lastSuccessfulSourceDialect, setLastSuccessfulSourceDialect] = useState<SqlDialect | null>(null);
+  const [lastSuccessfulTargetDialect, setLastSuccessfulTargetDialect] = useState<SqlDialect | null>(null);
 
   const { user, authLoading, signOut, supabase } = useAuth();
   const {
@@ -97,6 +101,7 @@ export default function Home() {
       const text = await navigator.clipboard.readText();
       if (text) {
         setSourceCode(text);
+        setTranspiledOnce(false);
         setSourcePasted(true);
         setTimeout(() => setSourcePasted(false), 2000);
       }
@@ -118,9 +123,24 @@ export default function Home() {
     if (savedTarget) setTargetDialect(savedTarget);
   }, [setSourceDialect, setTargetDialect]);
 
+  useEffect(() => {
+    if (cooldownTime <= 0) return;
+    const timer = setTimeout(() => setCooldownTime(cooldownTime - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [cooldownTime]);
+
   const handleTranspileClick = async () => {
     await handleTranspile();
     setShowRefinement(false);
+    setTranspiledOnce(true);
+    setLastSuccessfulSourceDialect(sourceDialect);
+    setLastSuccessfulTargetDialect(targetDialect);
+    setCooldownTime(2);
+  };
+
+  const handleSourceCodeChange = (newCode: string) => {
+    setSourceCode(newCode);
+    setTranspiledOnce(false);
   };
 
   const handleRefineClick = async (nextInstructions: string) => {
@@ -157,6 +177,13 @@ export default function Home() {
     const temp = sourceDialect;
     setSourceDialect(targetDialect);
     setTargetDialect(temp);
+    // Keep unlock if swapped dialects match last successful dialects
+    const shouldKeepUnlock = targetDialect === lastSuccessfulSourceDialect && sourceDialect === lastSuccessfulTargetDialect;
+    if (shouldKeepUnlock) {
+      setTranspiledOnce(true);
+    } else {
+      setTranspiledOnce(false);
+    }
   };
 
   const isDark = theme === "system" ? systemTheme === "dark" : theme === "dark";
@@ -188,6 +215,13 @@ export default function Home() {
           } else {
             setSourceDialect(newSource);
             localStorage.setItem(STORAGE_KEYS.SOURCE_DIALECT, newSource);
+            // Keep unlock if reverting to last successful dialects
+            const shouldKeepUnlock = newSource === lastSuccessfulSourceDialect && targetDialect === lastSuccessfulTargetDialect;
+            if (shouldKeepUnlock) {
+              setTranspiledOnce(true);
+            } else {
+              setTranspiledOnce(false);
+            }
           }
         }}>
           <SelectTrigger className="w-[180px] h-[36px] border border-slate-300 dark:border-white/10 bg-white dark:bg-zinc-900 text-sm font-semibold rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500/50 dark:focus:ring-indigo-500/40">
@@ -213,6 +247,13 @@ export default function Home() {
           } else {
             setTargetDialect(newTarget);
             localStorage.setItem(STORAGE_KEYS.TARGET_DIALECT, newTarget);
+            // Keep unlock if reverting to last successful dialects
+            const shouldKeepUnlock = newTarget === lastSuccessfulTargetDialect && sourceDialect === lastSuccessfulSourceDialect;
+            if (shouldKeepUnlock) {
+              setTranspiledOnce(true);
+            } else {
+              setTranspiledOnce(false);
+            }
           }
         }}>
           <SelectTrigger className="w-[180px] h-[36px] border border-indigo-200 dark:border-indigo-500/20 bg-indigo-50/50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 text-sm font-semibold rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500/50">
@@ -265,7 +306,7 @@ export default function Home() {
             <div className="absolute top-3 right-5 z-10 opacity-30 text-[10px] font-mono text-slate-400 dark:text-zinc-500 pointer-events-none select-none tracking-widest">INPUT</div>
             <AdaptiveEditor 
               value={sourceCode} 
-              onChange={setSourceCode} 
+              onChange={handleSourceCodeChange} 
               isDark={isDark} 
             />
           </div>
@@ -286,8 +327,10 @@ export default function Home() {
           <div className="relative">
             <Button
               variant="outline"
-              className="w-12 h-12 lg:w-12 lg:h-12 rounded-full bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 text-indigo-600 dark:text-indigo-400 border border-slate-200 dark:border-white/10 shadow-lg hover:shadow-xl transition-all duration-300 p-0"
+              disabled={!transpiledOnce || cooldownTime > 0}
+              className={`w-12 h-12 lg:w-12 lg:h-12 rounded-full bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 text-indigo-600 dark:text-indigo-400 border border-slate-200 dark:border-white/10 shadow-lg hover:shadow-xl transition-all duration-300 p-0 disabled:opacity-60 disabled:hover:bg-white dark:disabled:hover:bg-zinc-900 disabled:text-slate-400 dark:disabled:text-slate-500 disabled:cursor-not-allowed ${cooldownTime > 0 ? 'animate-unlock-glow' : ''}`}
               onClick={() => {
+                if (!transpiledOnce || cooldownTime > 0) return;
                 if (!user) return window.location.href = "/login";
                 if (showRefinement) {
                   if (!isRefining) handleRefineClick(instructions);
@@ -296,19 +339,28 @@ export default function Home() {
                 }
               }}
               onDoubleClick={() => {
+                if (!transpiledOnce || cooldownTime > 0) return;
                 if (!user) return window.location.href = "/login";
                 if (!isRefining) {
                   setInstructions("");
                   handleRefineClick("");
                 }
               }}
-              title="AI Refine — double click to skip instructions"
+              title={!transpiledOnce ? "Run SQL transpilation first" : cooldownTime > 0 ? "Review output..." : "AI Refine — double click to skip instructions"}
             >
-              {isRefining ? <Loader2 className="animate-spin w-5 h-5 lg:w-5 lg:h-5" /> : <Sparkles className="w-5 h-5 lg:w-5 lg:h-5" />}
+              {isRefining ? (
+                <Loader2 className="animate-spin w-5 h-5 lg:w-5 lg:h-5" />
+              ) : !transpiledOnce ? (
+                <Lock className="w-5 h-5 lg:w-5 lg:h-5" />
+              ) : cooldownTime > 0 ? (
+                <Lock className="w-5 h-5 lg:w-5 lg:h-5 animate-unlock-lock" />
+              ) : (
+                <Sparkles className="w-5 h-5 lg:w-5 lg:h-5" />
+              )}
             </Button>
 
             {/* AI Refinement Popup - Desktop only, positioned below button */}
-            {showRefinement && (
+            {showRefinement && transpiledOnce && cooldownTime <= 0 && (
               <div className="hidden lg:block absolute left-1/2 top-full mt-3 -translate-x-1/2 w-[300px] max-w-[90vw] max-h-[80vh] border border-slate-300 dark:border-white/10 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl shadow-2xl rounded-xl z-50 animate-in slide-in-from-top-2 flex flex-col transition-colors overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-white/[0.02]">
                   <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
@@ -347,7 +399,7 @@ export default function Home() {
         </div>
 
         {/* AI Refinement Popup - Mobile only, fixed position */}
-        {showRefinement && (
+        {showRefinement && transpiledOnce && cooldownTime <= 0 && (
           <div className="lg:hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200 p-4" onClick={() => setShowRefinement(false)}>
             <div className="w-[92vw] sm:w-[80vw] max-w-sm border border-slate-300 dark:border-white/10 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl shadow-2xl rounded-xl z-50 animate-in zoom-in-95 flex flex-col transition-colors overflow-hidden max-h-[80vh]" onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-white/[0.02] shrink-0">
