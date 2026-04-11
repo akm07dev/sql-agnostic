@@ -3,13 +3,14 @@
 import { Editor } from "@monaco-editor/react";
 import { useIsMobile } from "@/hooks/useIsMobile";
 
-interface MobileAdaptiveEditorProps {
+interface DesktopMonacoEditorProps {
   value: string;
   onChange: (value: string) => void;
   isDark: boolean;
+  readOnly?: boolean;
 }
 
-export function MobileAdaptiveEditor({ value, onChange, isDark }: MobileAdaptiveEditorProps) {
+export function DesktopMonacoEditor({ value, onChange, isDark, readOnly = false }: DesktopMonacoEditorProps) {
   const isMobile = useIsMobile();
   
   return (
@@ -43,7 +44,7 @@ export function MobileAdaptiveEditor({ value, onChange, isDark }: MobileAdaptive
         },
         overviewRulerLanes: 0,
         hideCursorInOverviewRuler: true,
-        readOnly: false,
+        readOnly: readOnly,
         fixedOverflowWidgets: true,
         // Mobile-specific settings to enable input
         links: false,
