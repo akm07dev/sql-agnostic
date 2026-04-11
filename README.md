@@ -243,6 +243,7 @@ The app runs at `http://localhost:3000` with API at `http://localhost:53321`.
 | `NEXT_PUBLIC_SUPABASE_URL` | `.env.local` | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | `.env.local` | Supabase public key |
 | `GROQ_API_KEY` | `.env.local` | AI refinement service |
+| `NEXT_PUBLIC_SITE_URL` | `.env.local` | Site URL for auth redirects (e.g., https://sql-agnostic.akm07.dev) |
 
 ---
 

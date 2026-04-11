@@ -3,6 +3,7 @@ import json
 import jwt
 from jwt import PyJWKClient
 from fastapi import FastAPI, HTTPException, Request, Depends
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import sqlglot
 from slowapi import Limiter, _rate_limit_exceeded_handler
@@ -12,9 +13,9 @@ from dotenv import load_dotenv
 import urllib.parse
 import base64
 
-# Load .env first, if not found or incomplete, load .env.local 
-load_dotenv()
+# Load .env.local first, if not found or incomplete, load .env 
 load_dotenv(".env.local")
+load_dotenv()
 
 CONFIG = {
     "LIMITS": {
@@ -196,6 +197,16 @@ limiter = Limiter(key_func=get_real_ip)  # default fallback
 app = FastAPI(docs_url=None, redoc_url=None)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# CORS middleware
+site_url = os.getenv("NEXT_PUBLIC_SITE_URL", "http://localhost:3000")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", site_url],
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["*"],
+)
 
 groq_client = Groq(api_key=os.getenv("GROQ_API_KEY", "dummy"))
 
