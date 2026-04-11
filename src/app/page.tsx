@@ -109,6 +109,7 @@ export default function Home() {
   const { popular, other } = getCategorizedDialects();
   const isMobile = useIsMobile();
   const effectiveTargetView = isMobile && targetView === "diff" ? "ai" : targetView;
+  const showSummary = !!aiExplanation;
 
   useEffect(() => {
     const savedSource = localStorage.getItem(STORAGE_KEYS.SOURCE_DIALECT) as SqlDialect;
@@ -230,7 +231,7 @@ export default function Home() {
       <div className="flex-1 flex flex-col lg:flex-row p-4 sm:p-6 pt-2 sm:pt-4 gap-4 sm:gap-6 relative z-10 max-w-[1700px] mx-auto w-full min-h-0">
 
         {/* SOURCE PANE */}
-        <div className="flex-1 flex flex-col min-w-0 h-[60vh] sm:h-[70vh] lg:h-auto lg:min-h-[70vh] bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl shadow-black/5 dark:shadow-black/40 overflow-hidden group shrink-0 lg:shrink">
+        <div className="flex-1 flex flex-col min-w-0 h-[60vh] min-h-[50vh] sm:h-[70vh] lg:h-auto lg:min-h-[70vh] bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl shadow-black/5 dark:shadow-black/40 overflow-hidden group shrink-0 lg:shrink">
           {/* Pane Toolbar */}
           <div className="h-12 flex items-center px-4 border-b border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-zinc-900/50 shrink-0 justify-between">
             <div className="flex items-center gap-2">
@@ -395,7 +396,7 @@ export default function Home() {
         )}
 
         {/* TARGET PANE */}
-        <div className="flex-1 flex flex-col min-w-0 h-[60vh] sm:h-[70vh] lg:h-auto lg:min-h-[70vh] bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl shadow-black/5 dark:shadow-black/40 overflow-hidden relative group shrink-0 lg:shrink">
+        <div className="flex-1 flex flex-col min-w-0 h-[60vh] min-h-[50vh] sm:h-[70vh] lg:h-auto lg:min-h-[70vh] bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl shadow-black/5 dark:shadow-black/40 overflow-hidden relative group shrink-0 lg:shrink">
           {/* Pane Toolbar */}
           <div className="h-12 flex items-center px-4 border-b border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-zinc-900/50 shrink-0 justify-between">
             <div className="flex items-center gap-2">
@@ -487,7 +488,7 @@ export default function Home() {
       </div>
 
       {/* AI Explanation — Console-style Output Panel */}
-      {aiExplanation && (effectiveTargetView === "ai" || effectiveTargetView === "diff") && (
+      {showSummary && (
         <div className="px-3 sm:px-6 mt-4 mb-6 max-w-[1700px] mx-auto w-full z-10 relative shrink-0">
           <div className="border border-slate-200 dark:border-white/10 bg-white dark:bg-zinc-900 rounded-xl overflow-hidden shadow-sm">
             <div className="h-8 flex items-center px-3 sm:px-4 bg-slate-100 dark:bg-zinc-800/80 border-b border-slate-200 dark:border-white/5">
@@ -496,7 +497,7 @@ export default function Home() {
                 CHANGE SUMMARY
               </div>
             </div>
-            <div className="p-3 sm:p-4 text-[12px] sm:text-[13px] text-slate-600 dark:text-zinc-400 leading-relaxed whitespace-pre-wrap font-mono max-h-[30vh] overflow-y-auto">{aiExplanation}</div>
+            <div className="p-3 sm:p-4 text-[12px] sm:text-[13px] text-slate-600 dark:text-zinc-400 leading-relaxed whitespace-pre-wrap font-mono max-h-[30vh] overflow-y-auto min-h-[80px]">{aiExplanation}</div>
           </div>
         </div>
       )}
