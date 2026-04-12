@@ -70,6 +70,7 @@ export default function Home() {
   const [cooldownTime, setCooldownTime] = useState(0);
   const [lastSuccessfulSourceDialect, setLastSuccessfulSourceDialect] = useState<SqlDialect | null>(null);
   const [lastSuccessfulTargetDialect, setLastSuccessfulTargetDialect] = useState<SqlDialect | null>(null);
+  const [currentRating, setCurrentRating] = useState<1 | -1 | null>(null);
 
   const { user, authLoading, signOut, supabase } = useAuth();
   const {
@@ -88,6 +89,9 @@ export default function Home() {
     aiExplanation,
     handleTranspile,
     handleRefine,
+    currentTranslationId,
+    updateTranslation,
+    resetTranslation,
   } = useSql({ user });
 
   const copyToClipboard = (text: string, setCopied: (v: boolean) => void) => {
@@ -102,6 +106,7 @@ export default function Home() {
       if (text) {
         setSourceCode(text);
         setTranspiledOnce(false);
+        setCurrentRating(null);
         setSourcePasted(true);
         setTimeout(() => setSourcePasted(false), 2000);
       }
@@ -141,6 +146,7 @@ export default function Home() {
   const handleSourceCodeChange = (newCode: string) => {
     setSourceCode(newCode);
     setTranspiledOnce(false);
+    setCurrentRating(null);
   };
 
   const handleRefineClick = async (nextInstructions: string) => {
@@ -156,20 +162,28 @@ export default function Home() {
   };
 
   const handleFeedback = async (isPositive: boolean) => {
-    if (!isPositive && user) {
+    if (!currentTranslationId) return; // Can't rate without a translation
+
+    // Only auto-trigger AI refinement if:
+    // 1. User is logged in
+    // 2. This is negative feedback (thumbs down)
+    // 3. AI refinement hasn't been used yet for this translation
+    if (!isPositive && user && !aiRefinedCode) {
       setShowRefinement(true);
     }
 
-    // Safely fire-and-forget telemetry insertion
+    const rating = isPositive ? 1 : -1;
+    setCurrentRating(rating); // Show visual feedback immediately
+
+    // Update rating in translations table
+    await updateTranslation(currentTranslationId, { rating });
+    
+    // Store feedback: simple reference to translation
     supabase.from('feedback').insert({
-      user_id: user?.id,
-      is_positive: isPositive,
-      source_code: sourceCode,
-      target_code: targetCode,
-      source_dialect: sourceDialect,
-      target_dialect: targetDialect
+      translation_id: currentTranslationId,
+      is_positive: isPositive
     }).then(({ error }) => {
-      if (error) console.error("Feedback telemetry failed:", error);
+      if (error) console.error("Feedback save failed:", error);
     });
   };
 
@@ -177,6 +191,7 @@ export default function Home() {
     const temp = sourceDialect;
     setSourceDialect(targetDialect);
     setTargetDialect(temp);
+    setCurrentRating(null);
     // Keep unlock if swapped dialects match last successful dialects
     const shouldKeepUnlock = targetDialect === lastSuccessfulSourceDialect && sourceDialect === lastSuccessfulTargetDialect;
     if (shouldKeepUnlock) {
@@ -222,6 +237,7 @@ export default function Home() {
             } else {
               setTranspiledOnce(false);
             }
+            setCurrentRating(null);
           }
         }}>
           <SelectTrigger className="w-[180px] h-[36px] border border-slate-300 dark:border-white/10 bg-white dark:bg-zinc-900 text-sm font-semibold rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500/50 dark:focus:ring-indigo-500/40">
@@ -254,6 +270,7 @@ export default function Home() {
             } else {
               setTranspiledOnce(false);
             }
+            setCurrentRating(null);
           }
         }}>
           <SelectTrigger className="w-[180px] h-[36px] border border-indigo-200 dark:border-indigo-500/20 bg-indigo-50/50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 text-sm font-semibold rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500/50">
@@ -487,10 +504,32 @@ export default function Home() {
               </Button>
 
               <div className="flex items-center bg-slate-200/50 dark:bg-white/5 rounded-md p-0.5 border border-slate-300 dark:border-white/5">
-                <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-500 dark:text-zinc-400 hover:text-green-600 dark:hover:text-green-400 hover:bg-slate-300/50 dark:hover:bg-white/5 rounded-sm transition-colors" onClick={() => handleFeedback(true)}>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  disabled={!currentTranslationId}
+                  className={`h-7 w-7 rounded-sm transition-all ${
+                    currentRating === 1
+                      ? "text-green-600 dark:text-green-400 bg-green-100/30 dark:bg-green-500/10"
+                      : "text-slate-500 dark:text-zinc-400 hover:text-green-600 dark:hover:text-green-400 hover:bg-slate-300/50 dark:hover:bg-white/5 disabled:opacity-30"
+                  }`}
+                  onClick={() => handleFeedback(true)}
+                  title="Good translation (SQLGlot output quality)"
+                >
                   <ThumbsUp size={13} />
                 </Button>
-                <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-500 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-slate-300/50 dark:hover:bg-white/5 rounded-sm transition-colors" onClick={() => handleFeedback(false)}>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  disabled={!currentTranslationId}
+                  className={`h-7 w-7 rounded-sm transition-all ${
+                    currentRating === -1
+                      ? "text-red-600 dark:text-red-400 bg-red-100/30 dark:bg-red-500/10"
+                      : "text-slate-500 dark:text-zinc-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-slate-300/50 dark:hover:bg-white/5 disabled:opacity-30"
+                  }`}
+                  onClick={() => handleFeedback(false)}
+                  title="Poor translation (SQLGlot output quality)"
+                >
                   <ThumbsDown size={13} />
                 </Button>
               </div>

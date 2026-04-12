@@ -3,6 +3,7 @@ import { User } from "@supabase/supabase-js";
 import { SqlDialect } from "@/lib/dialects";
 import { sqlService } from "@/services/sqlService";
 import { SQL_LIMITS, AUTH_MESSAGES, SQL_DEFAULTS } from "@/lib/constants";
+import { createClient } from "@/utils/supabase/client";
 
 interface UseSqlProps {
   user: User | null;
@@ -22,12 +23,70 @@ export function useSql({ user }: UseSqlProps) {
   const [isRefining, setIsRefining] = useState(false);
   const [aiExplanation, setAiExplanation] = useState("");
   const [lastRefineKey, setLastRefineKey] = useState("");
+  const [currentTranslationId, setCurrentTranslationId] = useState<string | null>(null);
 
   const getErrorMessage = (error: unknown): string => {
     if (error instanceof Error) {
       return error.message;
     }
     return AUTH_MESSAGES.REFINEMENT_EXECUTION_FAILED;
+  };
+
+  const saveTranslation = async (
+    input: string,
+    output: string,
+    sourceDial: SqlDialect,
+    targetDial: SqlDialect,
+    aiInstructions?: string,
+    wasRefined?: boolean
+  ): Promise<string | null> => {
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from("translations")
+      .insert({
+        user_id: user?.id || null, // Allow NULL for guests
+        input_sql: input,
+        output_sql: output,
+        source_dialect: sourceDial,
+        target_dialect: targetDial,
+        ai_instructions: aiInstructions || null,
+        was_ai_refined: wasRefined || false,
+      })
+      .select("id")
+      .single();
+
+    if (error) {
+      console.error("Failed to save translation:", error);
+      return null;
+    }
+
+    return data?.id || null;
+  };
+
+  const updateTranslation = async (
+    translationId: string,
+    updates: {
+      ai_instructions?: string;
+      was_ai_refined?: boolean;
+      rating?: number;
+    }
+  ): Promise<boolean> => {
+    const supabase = createClient();
+    const { error } = await supabase
+      .from("translations")
+      .update(updates)
+      .eq("id", translationId);
+
+    if (error) {
+      console.error("Failed to update translation:", error);
+      return false;
+    }
+
+    return true;
+  };
+
+  const resetTranslation = () => {
+    setCurrentTranslationId(null);
   };
 
   const handleTranspile = async () => {
@@ -52,6 +111,14 @@ export function useSql({ user }: UseSqlProps) {
         setTargetCode(data.transpiled_sql);
         setAiRefinedCode("");
         setTargetView("sqlglot");
+        // Save translation to database (for both authenticated users and guests)
+        const translationId = await saveTranslation(
+          sourceCode,
+          data.transpiled_sql,
+          sourceDialect,
+          targetDialect
+        );
+        setCurrentTranslationId(translationId);
       }
     } catch (error: unknown) {
       const message = getErrorMessage(error);
@@ -94,6 +161,13 @@ export function useSql({ user }: UseSqlProps) {
         setAiExplanation(response.explanation || "");
         setTargetView("ai");
         setLastRefineKey(refineKey);
+        // Update translation with AI refinement details
+        if (currentTranslationId) {
+          await updateTranslation(currentTranslationId, {
+            ai_instructions: instructions,
+            was_ai_refined: true,
+          });
+        }
         return;
       }
 
@@ -130,5 +204,8 @@ export function useSql({ user }: UseSqlProps) {
     aiExplanation,
     handleTranspile,
     handleRefine,
+    currentTranslationId,
+    updateTranslation,
+    resetTranslation,
   };
 }
