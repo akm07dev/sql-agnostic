@@ -12,6 +12,7 @@ from groq import Groq
 from dotenv import load_dotenv
 import urllib.parse
 import base64
+from supabase import create_client, Client
 
 # Load .env.local first, if not found or incomplete, load .env 
 load_dotenv(".env.local")
@@ -210,6 +211,26 @@ app.add_middleware(
 
 groq_client = Groq(api_key=os.getenv("GROQ_API_KEY", "dummy"))
 
+# Global Supabase client for anonymous operations
+supabase: Client = create_client(
+    supabase_url=os.getenv("NEXT_PUBLIC_SUPABASE_URL"),
+    supabase_key=os.getenv("NEXT_PUBLIC_SUPABASE_ANON_KEY")
+)
+
+def get_supabase_client_for_user(jwt_token: str) -> Client:
+    """Create a Supabase client authenticated with the user's JWT token."""
+    from supabase.lib.client_options import SyncClientOptions
+    
+    options = SyncClientOptions(
+        headers={"Authorization": f"Bearer {jwt_token}"}
+    )
+    
+    return create_client(
+        supabase_url=os.getenv("NEXT_PUBLIC_SUPABASE_URL"),
+        supabase_key=os.getenv("NEXT_PUBLIC_SUPABASE_ANON_KEY"),
+        options=options
+    )
+
 # ---------------------------------------------------------------------------
 # Models
 # ---------------------------------------------------------------------------
@@ -229,6 +250,22 @@ class RefineRequest(BaseModel):
     sqlGlotOutput: str
     sourceSql: str | None = None
     userInstructions: str | None = None
+
+class DashboardTransaction(BaseModel):
+    id: str
+    input_sql: str
+    output_sql: str
+    source_dialect: str
+    target_dialect: str
+    was_ai_refined: bool
+    rating: int | None
+    created_at: str
+
+class FeedbackMetrics(BaseModel):
+    total_feedback: int
+    positive_feedback: int
+    negative_feedback: int
+    positive_percentage: float
 
 
 # ---------------------------------------------------------------------------
@@ -402,3 +439,93 @@ def refine_sql(
         return {"success": True, "sql": refined_sql, "explanation": explanation}
     except Exception as e:
         return {"success": False, "error": str(e)}
+
+
+@app.get("/api/dashboard/transactions")
+def get_user_transactions(request: Request, user_payload: dict = Depends(verify_jwt_cookie)):
+    """Get user's recent transactions for dashboard."""
+    user_id = user_payload["sub"]
+    
+    # Get limit from query param, default to 10
+    limit = int(request.query_params.get("limit", 10))
+    if limit > 100:
+        limit = 100  # Cap at 100
+    
+    try:
+        # Extract JWT token and create authenticated client
+        jwt_token = _extract_jwt_from_cookies(request)
+        auth_supabase = get_supabase_client_for_user(jwt_token)
+        
+        # Get user's translations, ordered by created_at desc, limit to specified
+        response = auth_supabase.table("translations").select("*").eq("user_id", user_id).order("created_at", desc=True).limit(limit).execute()
+        transactions = response.data
+        
+        return {"transactions": transactions}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch transactions: {str(e)}")
+
+
+@app.get("/api/dashboard/feedback")
+def get_feedback_metrics(request: Request, user_payload: dict = Depends(verify_jwt_cookie)):
+    """Get feedback metrics for the authenticated user only using a database-side aggregation.
+
+    Transactions are primary (private), feedback is supplementary (public).
+    This ensures user-level filtering is enforced via transactions table without loading all rows.
+    """
+    try:
+        user_id = user_payload["sub"]
+        
+        # Extract JWT token and create authenticated client
+        jwt_token = _extract_jwt_from_cookies(request)
+        auth_supabase = get_supabase_client_for_user(jwt_token)
+        
+        response = auth_supabase.rpc("get_user_feedback_metrics", {"uid": user_id}).execute()
+        if getattr(response, "error", None):
+            raise Exception(response.error)
+
+        metrics = response.data[0] if response.data else None
+        if not metrics or metrics.get("total_feedback", 0) == 0:
+            fallback_response = auth_supabase.rpc("get_user_rating_metrics", {"uid": user_id}).execute()
+            if getattr(fallback_response, "error", None):
+                raise Exception(fallback_response.error)
+            metrics = fallback_response.data[0] if fallback_response.data else metrics
+
+        if not metrics:
+            return {"total_feedback": 0, "positive_feedback": 0, "negative_feedback": 0, "positive_percentage": 0.0}
+
+        return {
+            "total_feedback": metrics.get("total_feedback", 0),
+            "positive_feedback": metrics.get("positive_feedback", 0),
+            "negative_feedback": metrics.get("negative_feedback", 0),
+            "positive_percentage": float(metrics.get("positive_percentage", 0.0)),
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch feedback: {str(e)}")
+
+
+@app.get("/api/feedback")
+def get_public_feedback_metrics():
+    """Get aggregate feedback metrics (public endpoint, no transaction context) using database-side aggregation."""
+    try:
+        response = supabase.rpc("get_public_feedback_metrics").execute()
+        if getattr(response, "error", None):
+            raise Exception(response.error)
+
+        metrics = response.data[0] if response.data else None
+        if not metrics or metrics.get("total_feedback", 0) == 0:
+            fallback_response = supabase.rpc("get_public_rating_metrics").execute()
+            if getattr(fallback_response, "error", None):
+                raise Exception(fallback_response.error)
+            metrics = fallback_response.data[0] if fallback_response.data else metrics
+
+        if not metrics:
+            return {"total_feedback": 0, "positive_feedback": 0, "negative_feedback": 0, "positive_percentage": 0.0}
+
+        return {
+            "total_feedback": metrics.get("total_feedback", 0),
+            "positive_feedback": metrics.get("positive_feedback", 0),
+            "negative_feedback": metrics.get("negative_feedback", 0),
+            "positive_percentage": float(metrics.get("positive_percentage", 0.0)),
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch feedback: {str(e)}")

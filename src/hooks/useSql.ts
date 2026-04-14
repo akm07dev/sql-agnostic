@@ -41,6 +41,7 @@ export function useSql({ user }: UseSqlProps) {
     wasRefined?: boolean
   ): Promise<string | null> => {
     const supabase = createClient();
+
     const { data, error } = await supabase
       .from("translations")
       .insert({

@@ -178,10 +178,12 @@ export default function Home() {
     // Update rating in translations table
     await updateTranslation(currentTranslationId, { rating });
     
-    // Store feedback: simple reference to translation
-    supabase.from('feedback').insert({
+    // Store feedback: upsert to handle multiple feedback on same translation (keep latest)
+    supabase.from('feedback').upsert({
       translation_id: currentTranslationId,
       is_positive: isPositive
+    }, {
+      onConflict: 'translation_id'
     }).then(({ error }) => {
       if (error) console.error("Feedback save failed:", error);
     });
