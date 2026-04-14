@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Application-wide constants and configuration.
  */
 
@@ -10,6 +10,13 @@ export const APP_CONFIG = {
 export const APP_LINKS = {
   GITHUB: "https://github.com/akm07dev",
   LINKEDIN: "https://www.linkedin.com/in/ankitkm07/",
+  SITE: "https://sql-agnostic.akm07.dev",
+};
+
+export const APP_ROUTES = {
+  HOME: "/",
+  LOGIN: "/login",
+  DASHBOARD: "/dashboard",
 };
 
 export const SQL_LIMITS = {

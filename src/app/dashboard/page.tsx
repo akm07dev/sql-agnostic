@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart3, Clock, Lock } from "lucide-react";
 import { TransactionsList } from "@/components/dashboard/TransactionsList";
 import { FeedbackSection } from "@/components/dashboard/FeedbackSection";
+import { APP_ROUTES } from "@/lib/constants";
 
 interface Transaction {
   id: string;
@@ -119,7 +120,7 @@ export default function Dashboard() {
     setTransactionsLoading(true);
     
     try {
-      const transRes = await fetch(`/api/dashboard/transactions?limit=10&page=${page}`);
+      const transRes = await fetch(`/api/personal/transactions?limit=10&page=${page}`);
       if (transRes.ok) {
         const transData = await transRes.json();
         setTransactions(transData.transactions);
@@ -199,7 +200,7 @@ export default function Dashboard() {
             <CardContent>
               <div className="flex justify-center mt-2">
                 <Button
-                  onClick={() => window.location.href = "/login"}
+                  onClick={() => window.location.href = APP_ROUTES.LOGIN}
                   className="bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-sm transition-colors px-6 h-10 rounded-md"
                 >
                   Sign In

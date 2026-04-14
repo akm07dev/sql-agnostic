@@ -152,7 +152,7 @@ flowchart TD
 - 📐 [Architecture Details](docs/ARCHITECTURE.md)
 - 🔌 [API Reference](docs/API.md)
 - 🚀 [Deployment Guide](docs/DEPLOYMENT.md)
-- 🎓 [Engineering Walkthrough](docs/WALKTHROUGH.md)
+- 🎓 [Engineering Walkthrough](WALKTHROUGH.md)
 
 ## 📁 Project Structure
 
@@ -175,7 +175,7 @@ sql-agnostic/
 │   ├── app/
 │   │   ├── page.tsx               # Main SQL workbench
 │   │   ├── layout.tsx             # Root layout + SEO metadata
-│   │   ├── icon.tsx               # Dynamic favicon (edge ImageResponse)
+│   │   ├── icon.png / favicon.ico / apple-icon.png  # Static brand logo
 │   │   ├── opengraph-image.tsx    # OG card (Zinc-950 dark, Blue-600)
 │   │   ├── twitter-image.tsx      # Twitter card (same theme)
 │   │   ├── manifest.ts            # PWA manifest

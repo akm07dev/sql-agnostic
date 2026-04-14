@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Database, ChevronLeft, ChevronRight } from "lucide-react";
 import { TransactionItem } from "./TransactionItem";
+import { APP_ROUTES } from "@/lib/constants";
 
 interface Transaction {
   id: string;
@@ -75,7 +76,7 @@ export function TransactionsList({
               Start translating SQL to see your history here and track your activity.
             </p>
             <Button
-              onClick={() => window.location.href = "/"}
+              onClick={() => window.location.href = APP_ROUTES.HOME}
               className="bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-colors px-6 h-10 rounded-md"
             >
               Go to Translator

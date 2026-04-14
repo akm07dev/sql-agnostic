@@ -8,6 +8,7 @@ import { useTheme } from "next-themes";
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { APP_ROUTES } from "@/lib/constants";
 
 interface NavbarProps {
   user: User | null;
@@ -73,7 +74,7 @@ export function Navbar({ user, authLoading, onSignOut }: NavbarProps) {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => window.location.href = "/dashboard"}
+              onClick={() => window.location.href = APP_ROUTES.DASHBOARD}
               className="h-8 w-auto px-2 sm:px-3 gap-2 border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-zinc-900 text-slate-700 dark:text-slate-200 font-semibold shadow-sm hover:bg-slate-100 dark:hover:bg-white/10 rounded-full transition-all duration-300"
               title="Dashboard"
             >
@@ -99,7 +100,7 @@ export function Navbar({ user, authLoading, onSignOut }: NavbarProps) {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => window.location.href = "/dashboard"}
+              onClick={() => window.location.href = APP_ROUTES.DASHBOARD}
               className="h-8 w-auto px-2 sm:px-3 gap-2 border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-zinc-900 text-slate-700 dark:text-slate-200 font-semibold shadow-sm hover:bg-slate-100 dark:hover:bg-white/10 rounded-full transition-all duration-300"
               title="Dashboard"
             >
@@ -109,7 +110,7 @@ export function Navbar({ user, authLoading, onSignOut }: NavbarProps) {
             <Button
               variant="default"
               size="sm"
-              onClick={() => window.location.href = "/login"}
+              onClick={() => window.location.href = APP_ROUTES.LOGIN}
               className="h-8 text-xs px-3 sm:px-4 bg-zinc-900 dark:bg-white text-white dark:text-black hover:bg-zinc-800 dark:hover:bg-zinc-200 rounded-md font-semibold transition-all duration-300 shadow-sm"
             >
               <span className="hidden sm:inline">Sign In</span>

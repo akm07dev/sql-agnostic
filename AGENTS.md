@@ -64,7 +64,7 @@ Next.js App Router requires `useSearchParams()` to be wrapped in a `<Suspense>` 
 - `src/app/auth/callback/` — OAuth callback handler
 - `src/app/metrics/page.tsx` — Redirects to `/dashboard` (legacy route alias)
 - `api/index.py` — Single FastAPI file containing all endpoints, auth, rate limiting, and AI logic
-- `src/app/icon.tsx` — Dynamic favicon via Next.js `ImageResponse` (edge runtime). Replaces static `icon.png`/`favicon.ico`.
+- `src/app/icon.png` / `favicon.ico` / `apple-icon.png` — Static brand logo (same image, three formats for browser/PWA/Apple touch icon compatibility)
 - `src/app/opengraph-image.tsx` / `twitter-image.tsx` — Dynamic branded OG/Twitter card images (Zinc-950 dark theme, Blue-600 logo)
 
 ## Environment Variables

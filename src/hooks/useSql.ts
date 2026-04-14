@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { User } from "@supabase/supabase-js";
 import { SqlDialect } from "@/lib/dialects";
 import { sqlService } from "@/services/sqlService";
-import { SQL_LIMITS, AUTH_MESSAGES, SQL_DEFAULTS } from "@/lib/constants";
+import { SQL_LIMITS, AUTH_MESSAGES, SQL_DEFAULTS, APP_ROUTES } from "@/lib/constants";
 import { dbService } from "@/services/dbService";
 
 interface UseSqlProps {
@@ -25,6 +25,14 @@ export function useSql({ user }: UseSqlProps) {
   const [lastRefineKey, setLastRefineKey] = useState("");
   const [currentTranslationId, setCurrentTranslationId] = useState<string | null>(null);
 
+  // persistMounted skips the first execution of the persist effect.
+  // On mount, both effects run synchronously. Even though effect 1 (hydrate)
+  // runs first and sets state, effect 2 (persist) sees stale default values
+  // in its closure because React hasn't processed the setState calls yet.
+  // Skipping the first run means we never overwrite sessionStorage with defaults.
+  const hasHydrated = useRef(false);
+  const persistMounted = useRef(false);
+
   const getErrorMessage = (error: unknown): string => {
     if (error instanceof Error) {
       return error.message;
@@ -44,10 +52,18 @@ export function useSql({ user }: UseSqlProps) {
       setTargetView((sessionStorage.getItem("sql_session_view") as any) || "sqlglot");
       setCurrentTranslationId(sessionStorage.getItem("sql_session_id"));
     }
+    hasHydrated.current = true;
   }, []);
 
-  // 2. Persist state continuous to sessionStorage allowing silent handoffs
+  // Persist state to sessionStorage on every change.
+  // Skip the first execution: on initial mount effect 2 runs with stale default
+  // values in its closure even though effect 1 already called setState — because
+  // React batches state updates and hasn't re-rendered yet.
   useEffect(() => {
+    if (!persistMounted.current) {
+      persistMounted.current = true;
+      return;
+    }
     sessionStorage.setItem("sql_session_source", sourceCode);
     sessionStorage.setItem("sql_session_target", targetCode);
     sessionStorage.setItem("sql_session_s_dialect", sourceDialect);
@@ -140,7 +156,7 @@ export function useSql({ user }: UseSqlProps) {
 
   const handleRefine = async (instructions: string) => {
     if (!user) {
-      window.location.href = "/login";
+      window.location.href = APP_ROUTES.LOGIN;
       return;
     }
 

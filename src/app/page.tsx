@@ -11,7 +11,7 @@ import { type SqlDialect } from "@/lib/dialects";
 import { useTheme } from "next-themes";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { STORAGE_KEYS } from "@/lib/constants";
+import { STORAGE_KEYS, APP_ROUTES } from "@/lib/constants";
 import { useAuth } from "@/hooks/useAuth";
 import { useSql } from "@/hooks/useSql";
 import { useIsMobile } from "@/hooks/useIsMobile";
@@ -84,6 +84,11 @@ export default function Home() {
   const showSummary = !!aiExplanation;
 
   useEffect(() => {
+    // Only restore dialect preferences from localStorage when there is no active
+    // sessionStorage session. If a session exists, useSql.ts already hydrated
+    // the correct dialects from it and we must not overwrite them.
+    const hasSession = !!sessionStorage.getItem("sql_session_source");
+    if (hasSession) return;
     const savedSource = localStorage.getItem(STORAGE_KEYS.SOURCE_DIALECT) as SqlDialect;
     const savedTarget = localStorage.getItem(STORAGE_KEYS.TARGET_DIALECT) as SqlDialect;
     if (savedSource) setSourceDialect(savedSource);
@@ -262,7 +267,7 @@ export default function Home() {
               className={`w-12 h-12 lg:w-12 lg:h-12 rounded-full bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-blue-600 dark:text-blue-400 border border-zinc-200 dark:border-zinc-800 shadow-sm transition-all duration-300 p-0 disabled:opacity-60 disabled:hover:bg-white dark:disabled:hover:bg-zinc-900 disabled:text-slate-400 dark:disabled:text-slate-500 disabled:cursor-not-allowed`}
               onClick={() => {
                 if (!transpiledOnce || cooldownTime > 0) return;
-                if (!user) return window.location.href = "/login";
+                if (!user) return window.location.href = APP_ROUTES.LOGIN;
                 if (showRefinement) {
                   if (!isRefining) handleRefineClick(instructions);
                 } else {
@@ -271,7 +276,7 @@ export default function Home() {
               }}
               onDoubleClick={() => {
                 if (!transpiledOnce || cooldownTime > 0) return;
-                if (!user) return window.location.href = "/login";
+                if (!user) return window.location.href = APP_ROUTES.LOGIN;
                 if (!isRefining) {
                   setInstructions("");
                   handleRefineClick("");
