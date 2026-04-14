@@ -1,9 +1,9 @@
-﻿import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { User } from "@supabase/supabase-js";
 import { SqlDialect } from "@/lib/dialects";
 import { sqlService } from "@/services/sqlService";
-import { SQL_LIMITS, AUTH_MESSAGES, SQL_DEFAULTS } from "@/lib/constants";
-import { createClient } from "@/utils/supabase/client";
+import { SQL_LIMITS, AUTH_MESSAGES, SQL_DEFAULTS, APP_ROUTES } from "@/lib/constants";
+import { dbService } from "@/services/dbService";
 
 interface UseSqlProps {
   user: User | null;
@@ -25,12 +25,57 @@ export function useSql({ user }: UseSqlProps) {
   const [lastRefineKey, setLastRefineKey] = useState("");
   const [currentTranslationId, setCurrentTranslationId] = useState<string | null>(null);
 
+  // persistMounted skips the first execution of the persist effect.
+  // On mount, both effects run synchronously. Even though effect 1 (hydrate)
+  // runs first and sets state, effect 2 (persist) sees stale default values
+  // in its closure because React hasn't processed the setState calls yet.
+  // Skipping the first run means we never overwrite sessionStorage with defaults.
+  const hasHydrated = useRef(false);
+  const persistMounted = useRef(false);
+
   const getErrorMessage = (error: unknown): string => {
     if (error instanceof Error) {
       return error.message;
     }
     return AUTH_MESSAGES.REFINEMENT_EXECUTION_FAILED;
   };
+
+  // 1. Hydrate state from sessionStorage on component mount
+  useEffect(() => {
+    const savedSource = sessionStorage.getItem("sql_session_source");
+    if (savedSource) {
+      setSourceCode(savedSource);
+      setTargetCode(sessionStorage.getItem("sql_session_target") || "");
+      setSourceDialect((sessionStorage.getItem("sql_session_s_dialect") as SqlDialect) || SQL_DEFAULTS.SOURCE_DIALECT);
+      setTargetDialect((sessionStorage.getItem("sql_session_t_dialect") as SqlDialect) || SQL_DEFAULTS.TARGET_DIALECT);
+      setAiRefinedCode(sessionStorage.getItem("sql_session_ai") || "");
+      setTargetView((sessionStorage.getItem("sql_session_view") as any) || "sqlglot");
+      setCurrentTranslationId(sessionStorage.getItem("sql_session_id"));
+    }
+    hasHydrated.current = true;
+  }, []);
+
+  // Persist state to sessionStorage on every change.
+  // Skip the first execution: on initial mount effect 2 runs with stale default
+  // values in its closure even though effect 1 already called setState — because
+  // React batches state updates and hasn't re-rendered yet.
+  useEffect(() => {
+    if (!persistMounted.current) {
+      persistMounted.current = true;
+      return;
+    }
+    sessionStorage.setItem("sql_session_source", sourceCode);
+    sessionStorage.setItem("sql_session_target", targetCode);
+    sessionStorage.setItem("sql_session_s_dialect", sourceDialect);
+    sessionStorage.setItem("sql_session_t_dialect", targetDialect);
+    sessionStorage.setItem("sql_session_ai", aiRefinedCode);
+    sessionStorage.setItem("sql_session_view", targetView);
+    if (currentTranslationId) {
+      sessionStorage.setItem("sql_session_id", currentTranslationId);
+    } else {
+      sessionStorage.removeItem("sql_session_id");
+    }
+  }, [sourceCode, targetCode, sourceDialect, targetDialect, aiRefinedCode, targetView, currentTranslationId]);
 
   const saveTranslation = async (
     input: string,
@@ -40,27 +85,15 @@ export function useSql({ user }: UseSqlProps) {
     aiInstructions?: string,
     wasRefined?: boolean
   ): Promise<string | null> => {
-    const supabase = createClient();
-    const { data, error } = await supabase
-      .from("translations")
-      .insert({
-        user_id: user?.id || null, // Allow NULL for guests
-        input_sql: input,
-        output_sql: output,
-        source_dialect: sourceDial,
-        target_dialect: targetDial,
-        ai_instructions: aiInstructions || null,
-        was_ai_refined: wasRefined || false,
-      })
-      .select("id")
-      .single();
-
-    if (error) {
-      console.error("Failed to save translation:", error);
-      return null;
-    }
-
-    return data?.id || null;
+    return dbService.saveTranslation(
+      user?.id || null, 
+      input, 
+      output, 
+      sourceDial, 
+      targetDial, 
+      aiInstructions, 
+      wasRefined
+    );
   };
 
   const updateTranslation = async (
@@ -71,18 +104,7 @@ export function useSql({ user }: UseSqlProps) {
       rating?: number;
     }
   ): Promise<boolean> => {
-    const supabase = createClient();
-    const { error } = await supabase
-      .from("translations")
-      .update(updates)
-      .eq("id", translationId);
-
-    if (error) {
-      console.error("Failed to update translation:", error);
-      return false;
-    }
-
-    return true;
+    return dbService.updateTranslation(translationId, updates);
   };
 
   const resetTranslation = () => {
@@ -134,7 +156,7 @@ export function useSql({ user }: UseSqlProps) {
 
   const handleRefine = async (instructions: string) => {
     if (!user) {
-      window.location.href = "/login";
+      window.location.href = APP_ROUTES.LOGIN;
       return;
     }
 

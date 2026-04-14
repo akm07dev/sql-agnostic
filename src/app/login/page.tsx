@@ -33,13 +33,9 @@ function LoginForm() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen h-full w-full bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-300 font-sans items-center justify-center relative selection:bg-indigo-200 dark:selection:bg-indigo-500/30 transition-colors duration-500">
-      <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-500/10 dark:bg-indigo-900/10 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-blue-500/10 dark:bg-blue-900/10 blur-[120px] pointer-events-none" />
+    <div className="flex flex-col min-h-screen h-full w-full bg-zinc-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-300 font-sans items-center justify-center relative selection:bg-blue-200 dark:selection:bg-blue-500/30 transition-colors">
       
-      <div className="flex flex-col w-[90%] sm:max-w-md gap-2 mx-auto z-10 bg-white/70 dark:bg-zinc-950/60 backdrop-blur-xl border border-slate-200 dark:border-white/5 rounded-3xl py-10 px-8 sm:px-12 shadow-2xl transition-colors relative overflow-hidden">
-        
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/50 dark:via-white/10 to-transparent"></div>
+      <div className="flex flex-col w-[90%] sm:max-w-md gap-2 mx-auto z-10 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl py-10 px-8 sm:px-10 shadow-sm relative">
 
         <Link
           href="/"
@@ -87,7 +83,7 @@ function LoginForm() {
           type="button"
           disabled={loading}
           onClick={handleGoogleLogin}
-          className="w-full flex items-center gap-2 mb-4 h-11 border-slate-300 dark:border-white/10 bg-transparent hover:bg-slate-100 dark:hover:bg-white/5 text-slate-700 dark:text-zinc-200"
+          className="w-full flex items-center gap-2 mb-4 h-11 border-zinc-300 dark:border-zinc-700 bg-transparent hover:bg-zinc-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-200 rounded-md"
         >
           {loading ? (
             <Loader2 size={16} className="animate-spin" />
@@ -104,10 +100,10 @@ function LoginForm() {
 
         <div className="relative mb-4 mt-2">
           <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-slate-200 dark:border-white/10" />
+            <span className="w-full border-t border-zinc-200 dark:border-zinc-800" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-slate-50 dark:bg-zinc-950 px-3 font-semibold tracking-wider text-slate-400 dark:text-zinc-500">
+            <span className="bg-white dark:bg-zinc-900 px-3 font-semibold tracking-wider text-slate-400 dark:text-zinc-500">
               Or continue with email
             </span>
           </div>
@@ -123,7 +119,7 @@ function LoginForm() {
               required
               type="email"
               autoComplete="email"
-              className="bg-white dark:bg-black/50 border-slate-300 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-600 focus-visible:ring-indigo-500"
+              className="bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-600 focus-visible:ring-blue-500 rounded-md"
             />
           </div>
           <div>
@@ -136,14 +132,14 @@ function LoginForm() {
               type="password"
               autoComplete={mode === "signup" ? "new-password" : "current-password"}
               minLength={6}
-              className="bg-white dark:bg-black/50 border-slate-300 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-600 focus-visible:ring-indigo-500"
+              className="bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-600 focus-visible:ring-blue-500 rounded-md"
             />
           </div>
 
           {mode === "signin" && (
             <Link
               href="/login/reset"
-              className="text-xs text-slate-500 dark:text-zinc-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors text-right -mt-1 font-medium"
+              className="text-xs text-slate-500 dark:text-zinc-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-right -mt-1 font-medium"
             >
               Forgot password?
             </Link>
@@ -151,7 +147,7 @@ function LoginForm() {
 
           <Button
             type="submit"
-            className="w-full h-11 bg-slate-900 dark:bg-indigo-600 hover:bg-slate-800 dark:hover:bg-indigo-500 text-white dark:text-white shadow-md font-semibold transition-all mt-2"
+            className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white shadow-sm font-semibold transition-colors mt-2 rounded-md"
             disabled={loading}
           >
             {loading ? (
@@ -171,7 +167,7 @@ export default function LoginPage() {
   return (
     <Suspense fallback={
       <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="animate-spin text-indigo-500" />
+        <Loader2 className="animate-spin text-blue-500" />
       </div>
     }>
       <LoginForm />

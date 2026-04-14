@@ -14,7 +14,7 @@ export default async function Image() {
     (
       <div
         style={{
-          background: "linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4f46e5 100%)",
+          background: "linear-gradient(135deg, #09090b 0%, #18181b 100%)",
           width: "100%",
           height: "100%",
           display: "flex",
@@ -52,11 +52,11 @@ export default async function Image() {
               width: "80px",
               height: "80px",
               borderRadius: "20px",
-              background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
+              background: "linear-gradient(135deg, #1d4ed8, #3b82f6)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              boxShadow: "0 20px 40px rgba(99, 102, 241, 0.3)",
+              boxShadow: "0 20px 40px rgba(59, 130, 246, 0.2)",
             }}
           >
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">

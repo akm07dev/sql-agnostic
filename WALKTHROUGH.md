@@ -1,4 +1,4 @@
-﻿# SQLAgnostic Walkthrough
+# SQLAgnostic Walkthrough
 
 Deep dive into the engineering decisions and implementation details.
 
@@ -496,3 +496,81 @@ A: Three layers: (1) rate limiting by user type, (2) guard model filters malicio
 ---
 
 *Built by akm07 • https://akm07.dev • https://github.com/akm07dev/sql-agnostic*
+
+---
+
+## 10. Dashboard Architecture
+
+The `/dashboard` page provides a side-by-side comparison of global and personal metrics.
+
+### Data Scope Separation
+
+API routes are prefixed by their data scope to make intent explicit at a glance:
+
+| Route | Auth Required | Description |
+|-------|--------------|-------------|
+| `GET /api/public/feedback` | No | Global aggregate metrics via Supabase RPC |
+| `GET /api/personal/feedback` | Yes | Auth user's own feedback stats |
+| `GET /api/personal/transactions` | Yes | Paginated translation history |
+
+### Preventing Double Fetches
+
+React 18 Strict Mode and Supabase's auth state change events both cause effects to re-run, which naively doubles every API call. We avoid this with isolated `useEffect` hooks + `useRef` guards:
+
+```typescript
+const hasFetchedPublic = useRef(false);
+
+useEffect(() => {
+  if (hasFetchedPublic.current) return; // bail early if already fetched
+  hasFetchedPublic.current = true;
+  loadFeedback("public");
+}, []); // empty dep = runs once on mount only
+```
+
+A separate `lastFetchedPage` ref guards the paginated transaction fetch from re-firing when page number hasn't actually changed.
+
+### SECURITY DEFINER on Aggregate RPCs
+
+Supabase RLS (Row Level Security) is active on the `translations` table. When the anonymous Supabase client calls an RPC to count global rows, RLS filters it down to 0 (no rows visible without a user context).
+
+The fix: aggregate RPCs in `0004_feedback_aggregates.sql` are marked `SECURITY DEFINER` + `SET search_path = public`. This executes the function under the role that *created* it (which has full table visibility) rather than the role of the *caller*.
+
+### Database Performance: Compound Index
+
+The transaction list query pattern is:
+```sql
+SELECT * FROM translations
+WHERE user_id = $1
+ORDER BY created_at DESC
+LIMIT 10;
+```
+
+A plain `user_id` index forces Postgres to filter rows then sort in memory. The compound index `(user_id, created_at DESC)` allows Postgres to satisfy both the filter and sort order in a single index scan, eliminating the sort step entirely.
+
+### Global vs You Metric Cards
+
+The `FeedbackSection` component renders 4 split metric cards (Total Usage, AI Refinements, Approval Rating, Positive Ratings). Each card has two columns: `Global` (the public aggregate) and `You` (the authenticated user's personal data). For unauthenticated users, the `You` column shows a non-intrusive Sign In prompt instead of locking the whole page.
+
+### Session Persistence (Guest → Auth Handoff)
+
+Before this change, a guest who hit "AI Refine" was redirected to `/login`. After logging in, they returned to `/` to find an empty editor — a frustrating UX collapse that would kill conversion.
+
+The fix is two symmetric `useEffect` hooks in `useSql.ts`:
+1. **Hydration**: On mount, read all editor state from `sessionStorage` if present
+2. **Persistence**: On every state change, write all editor state to `sessionStorage`
+
+```typescript
+// Mount: restore from cache
+useEffect(() => {
+  const saved = sessionStorage.getItem("sql_session_source");
+  if (saved) setSourceCode(saved); // + all other fields
+}, []);
+
+// Persist on every change
+useEffect(() => {
+  sessionStorage.setItem("sql_session_source", sourceCode);
+  // ...all other fields
+}, [sourceCode, targetCode, ...]);
+```
+
+`sessionStorage` is intentionally chosen over `localStorage` because it scopes to the browser tab, clearing naturally when the tab closes — the right lifecycle for ephemeral editor state.

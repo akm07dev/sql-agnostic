@@ -35,5 +35,12 @@ CREATE POLICY "Users can delete own translations" ON public.translations
     FOR DELETE USING (auth.uid() = user_id OR user_id IS NULL);
 
 -- Indexes for performance
-CREATE INDEX idx_translations_user_id ON public.translations(user_id);
-CREATE INDEX idx_translations_created_at ON public.translations(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_translations_user_id ON public.translations(user_id);
+CREATE INDEX IF NOT EXISTS idx_translations_created_at ON public.translations(created_at DESC);
+
+-- Compound index to optimize the dashboard transaction fetching and pagination:
+-- eq('user_id') + order('created_at', desc)
+CREATE INDEX IF NOT EXISTS idx_translations_user_id_created_at ON public.translations(user_id, created_at DESC);
+
+-- Partial index to strictly speed up AI Refinement boolean counting logic
+CREATE INDEX IF NOT EXISTS idx_translations_was_ai_refined ON public.translations(was_ai_refined) WHERE was_ai_refined = TRUE;

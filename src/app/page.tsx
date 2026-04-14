@@ -6,59 +6,22 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectGroup, SelectLabel, SelectSeparator } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeftRight, Sparkles, ThumbsDown, ThumbsUp, Loader2, ChevronRight, Minimize2, Copy, Check, ClipboardPaste, Lock } from "lucide-react";
-import { getCategorizedDialects, type SqlDialect } from "@/lib/dialects";
+import { dbService } from "@/services/dbService";
+import { type SqlDialect } from "@/lib/dialects";
 import { useTheme } from "next-themes";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { STORAGE_KEYS } from "@/lib/constants";
+import { STORAGE_KEYS, APP_ROUTES } from "@/lib/constants";
 import { useAuth } from "@/hooks/useAuth";
 import { useSql } from "@/hooks/useSql";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { AdaptiveEditor } from "@/components/editor/AdaptiveEditor";
 import { DiffEditor } from "@monaco-editor/react";
+import { EditorToolbar } from "@/components/editor/EditorToolbar";
+import { AIMetadataPanel } from "@/components/editor/AIMetadataPanel";
 import { JsonLd } from "@/components/seo/JsonLd";
 
-const DialectIcon = ({ icon, className = "w-4 h-4" }: { icon: string; className?: string }) => (
-  <span className="inline-flex items-center justify-center shrink-0 w-5 h-5 rounded bg-slate-100 dark:bg-zinc-800 p-0.5">
-    <Image src={icon} alt="" width={20} height={20} className={`${className} dark:invert opacity-80 object-contain`} />
-  </span>
-);
 
-function DialectOptions({
-  popular,
-  other,
-}: {
-  popular: ReturnType<typeof getCategorizedDialects>["popular"];
-  other: ReturnType<typeof getCategorizedDialects>["other"];
-}) {
-  return (
-    <>
-      <SelectGroup>
-        <SelectLabel className="text-[10px] uppercase font-bold tracking-wider text-slate-400 dark:text-zinc-500">Popular</SelectLabel>
-        {popular.map((d) => (
-          <SelectItem key={d.value} value={d.value} className="cursor-pointer">
-            <span className="flex items-center gap-2">
-              <DialectIcon icon={d.icon} className="w-4 h-4" />
-              {d.label}
-            </span>
-          </SelectItem>
-        ))}
-      </SelectGroup>
-      <SelectSeparator className="my-1 border-slate-200 dark:border-white/5" />
-      <SelectGroup>
-        <SelectLabel className="text-[10px] uppercase font-bold tracking-wider text-slate-400 dark:text-zinc-500">All Dialects</SelectLabel>
-        {other.map((d) => (
-          <SelectItem key={d.value} value={d.value} className="cursor-pointer">
-            <span className="flex items-center gap-2">
-              <DialectIcon icon={d.icon} className="w-4 h-4" />
-              {d.label}
-            </span>
-          </SelectItem>
-        ))}
-      </SelectGroup>
-    </>
-  );
-}
 
 export default function Home() {
   const [showRefinement, setShowRefinement] = useState(false);
@@ -116,12 +79,16 @@ export default function Home() {
   };
 
   const { theme, systemTheme } = useTheme();
-  const { popular, other } = getCategorizedDialects();
   const isMobile = useIsMobile();
   const effectiveTargetView = isMobile && targetView === "diff" ? "ai" : targetView;
   const showSummary = !!aiExplanation;
 
   useEffect(() => {
+    // Only restore dialect preferences from localStorage when there is no active
+    // sessionStorage session. If a session exists, useSql.ts already hydrated
+    // the correct dialects from it and we must not overwrite them.
+    const hasSession = !!sessionStorage.getItem("sql_session_source");
+    if (hasSession) return;
     const savedSource = localStorage.getItem(STORAGE_KEYS.SOURCE_DIALECT) as SqlDialect;
     const savedTarget = localStorage.getItem(STORAGE_KEYS.TARGET_DIALECT) as SqlDialect;
     if (savedSource) setSourceDialect(savedSource);
@@ -178,13 +145,8 @@ export default function Home() {
     // Update rating in translations table
     await updateTranslation(currentTranslationId, { rating });
     
-    // Store feedback: simple reference to translation
-    supabase.from('feedback').insert({
-      translation_id: currentTranslationId,
-      is_positive: isPositive
-    }).then(({ error }) => {
-      if (error) console.error("Feedback save failed:", error);
-    });
+    // Store feedback via dbService
+    await dbService.saveFeedback(currentTranslationId, isPositive);
   };
 
   const swapDialects = () => {
@@ -201,89 +163,46 @@ export default function Home() {
     }
   };
 
-  const isDark = theme === "system" ? systemTheme === "dark" : theme === "dark";
-
-  const getDialect = (value: string) => {
-    const all = [...popular, ...other];
-    return all.find(d => d.value === value);
+  const handleSourceDialectChange = (newSource: SqlDialect) => {
+    if (newSource === targetDialect) {
+      swapDialects();
+    } else {
+      setSourceDialect(newSource);
+      localStorage.setItem(STORAGE_KEYS.SOURCE_DIALECT, newSource);
+      const shouldKeepUnlock = newSource === lastSuccessfulSourceDialect && targetDialect === lastSuccessfulTargetDialect;
+      setTranspiledOnce(shouldKeepUnlock);
+      setCurrentRating(null);
+    }
   };
 
-  return (
-    <div className="flex flex-col min-h-screen w-full bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-300 font-sans relative selection:bg-indigo-200 dark:selection:bg-indigo-500/30 transition-colors duration-500 overflow-x-hidden">
-      <JsonLd />
+  const handleTargetDialectChange = (newTarget: SqlDialect) => {
+    if (newTarget === sourceDialect) {
+      swapDialects();
+    } else {
+      setTargetDialect(newTarget);
+      localStorage.setItem(STORAGE_KEYS.TARGET_DIALECT, newTarget);
+      const shouldKeepUnlock = newTarget === lastSuccessfulTargetDialect && sourceDialect === lastSuccessfulSourceDialect;
+      setTranspiledOnce(shouldKeepUnlock);
+      setCurrentRating(null);
+    }
+  };
 
-      {/* Background decorations - isolated in overflow-hidden container */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-500/10 dark:bg-indigo-900/10 blur-[120px]" />
-        <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-blue-500/10 dark:bg-blue-900/10 blur-[120px]" />
-      </div>
+  const isDark = theme === "system" ? systemTheme === "dark" : theme === "dark";
+
+  return (
+    <div className="flex flex-col min-h-screen w-full bg-zinc-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-300 font-sans relative selection:bg-blue-200 dark:selection:bg-blue-500/30 transition-colors duration-500 overflow-x-hidden">
+      <JsonLd />
 
       <Navbar user={user} authLoading={authLoading} onSignOut={handleSignOut} />
 
       {/* Top Routing Header Centralized below main header */}
-      <div className="w-full flex justify-center items-center py-5 -mb-2 z-10 gap-3 border-b border-transparent bg-slate-50/50 dark:bg-zinc-950/80 backdrop-blur-3xl">
-        <Select value={sourceDialect} onValueChange={(v: string | null) => {
-          if (!v) return;
-          const newSource = v as SqlDialect;
-          if (newSource === targetDialect) {
-            swapDialects();
-          } else {
-            setSourceDialect(newSource);
-            localStorage.setItem(STORAGE_KEYS.SOURCE_DIALECT, newSource);
-            // Keep unlock if reverting to last successful dialects
-            const shouldKeepUnlock = newSource === lastSuccessfulSourceDialect && targetDialect === lastSuccessfulTargetDialect;
-            if (shouldKeepUnlock) {
-              setTranspiledOnce(true);
-            } else {
-              setTranspiledOnce(false);
-            }
-            setCurrentRating(null);
-          }
-        }}>
-          <SelectTrigger className="w-[180px] h-[36px] border border-slate-300 dark:border-white/10 bg-white dark:bg-zinc-900 text-sm font-semibold rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500/50 dark:focus:ring-indigo-500/40">
-            <span className="flex items-center gap-2 truncate">
-              <DialectIcon icon={getDialect(sourceDialect)?.icon ?? ""} className="w-4 h-4 shrink-0" />
-              {getDialect(sourceDialect)?.label || sourceDialect}
-            </span>
-          </SelectTrigger>
-          <SelectContent className="rounded-xl shadow-2xl">
-            <DialectOptions popular={popular} other={other} />
-          </SelectContent>
-        </Select>
-
-        <Button variant="outline" size="icon" className="h-8 w-8 rounded-full border-slate-300 dark:border-white/10 bg-white dark:bg-zinc-900 shadow-sm hover:shadow-md hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-500 dark:text-zinc-400 hover:text-slate-800 dark:hover:text-white transition-all" onClick={swapDialects} title="Reverse Dialects">
-          <ArrowLeftRight className="w-3.5 h-3.5" />
-        </Button>
-
-        <Select value={targetDialect} onValueChange={(v: string | null) => {
-          if (!v) return;
-          const newTarget = v as SqlDialect;
-          if (newTarget === sourceDialect) {
-            swapDialects();
-          } else {
-            setTargetDialect(newTarget);
-            localStorage.setItem(STORAGE_KEYS.TARGET_DIALECT, newTarget);
-            // Keep unlock if reverting to last successful dialects
-            const shouldKeepUnlock = newTarget === lastSuccessfulTargetDialect && sourceDialect === lastSuccessfulSourceDialect;
-            if (shouldKeepUnlock) {
-              setTranspiledOnce(true);
-            } else {
-              setTranspiledOnce(false);
-            }
-            setCurrentRating(null);
-          }
-        }}>
-          <SelectTrigger className="w-[180px] h-[36px] border border-indigo-200 dark:border-indigo-500/20 bg-indigo-50/50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 text-sm font-semibold rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500/50">
-            <span className="flex items-center gap-2 truncate">
-              <DialectIcon icon={getDialect(targetDialect)?.icon ?? ""} className="w-4 h-4 shrink-0" />
-              {getDialect(targetDialect)?.label || targetDialect}
-            </span>
-          </SelectTrigger>
-          <SelectContent className="rounded-xl shadow-2xl">
-            <DialectOptions popular={popular} other={other} />
-          </SelectContent>
-        </Select>
-      </div>
+      <EditorToolbar 
+        sourceDialect={sourceDialect}
+        targetDialect={targetDialect}
+        onSourceChange={handleSourceDialectChange}
+        onTargetChange={handleTargetDialectChange}
+        onSwapDialects={swapDialects}
+      />
 
       {/* Main Dual-Pane Environment */}
       <div className="flex-1 flex flex-col lg:flex-row p-4 sm:p-6 pt-2 sm:pt-4 gap-4 sm:gap-6 relative z-10 max-w-[1700px] mx-auto w-full min-h-0">
@@ -335,7 +254,7 @@ export default function Home() {
           <Button
             onClick={handleTranspileClick}
             disabled={isTranspiling}
-            className="w-14 h-14 lg:w-14 lg:h-14 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white shadow-[0_0_20px_rgba(79,70,229,0.3)] hover:shadow-[0_0_30px_rgba(79,70,229,0.5)] transition-all duration-300 font-semibold border-4 border-slate-50 dark:border-zinc-950 flex shadow-indigo-600/30 items-center justify-center p-0"
+            className="w-14 h-14 lg:w-14 lg:h-14 rounded-full bg-blue-600 hover:bg-blue-500 text-white shadow-sm transition-all duration-300 font-semibold border-4 border-zinc-50 dark:border-zinc-950 flex items-center justify-center p-0"
             title="Transpile Code"
           >
             {isTranspiling ? <Loader2 className="animate-spin w-6 h-6 lg:w-6 lg:h-6" /> : <ChevronRight className="w-8 h-8 lg:w-8 lg:h-8 ml-0.5" />}
@@ -345,10 +264,10 @@ export default function Home() {
             <Button
               variant="outline"
               disabled={!transpiledOnce || cooldownTime > 0}
-              className={`w-12 h-12 lg:w-12 lg:h-12 rounded-full bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 text-indigo-600 dark:text-indigo-400 border border-slate-200 dark:border-white/10 shadow-lg hover:shadow-xl transition-all duration-300 p-0 disabled:opacity-60 disabled:hover:bg-white dark:disabled:hover:bg-zinc-900 disabled:text-slate-400 dark:disabled:text-slate-500 disabled:cursor-not-allowed ${cooldownTime > 0 ? 'animate-unlock-glow' : ''}`}
+              className={`w-12 h-12 lg:w-12 lg:h-12 rounded-full bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-blue-600 dark:text-blue-400 border border-zinc-200 dark:border-zinc-800 shadow-sm transition-all duration-300 p-0 disabled:opacity-60 disabled:hover:bg-white dark:disabled:hover:bg-zinc-900 disabled:text-slate-400 dark:disabled:text-slate-500 disabled:cursor-not-allowed`}
               onClick={() => {
                 if (!transpiledOnce || cooldownTime > 0) return;
-                if (!user) return window.location.href = "/login";
+                if (!user) return window.location.href = APP_ROUTES.LOGIN;
                 if (showRefinement) {
                   if (!isRefining) handleRefineClick(instructions);
                 } else {
@@ -357,7 +276,7 @@ export default function Home() {
               }}
               onDoubleClick={() => {
                 if (!transpiledOnce || cooldownTime > 0) return;
-                if (!user) return window.location.href = "/login";
+                if (!user) return window.location.href = APP_ROUTES.LOGIN;
                 if (!isRefining) {
                   setInstructions("");
                   handleRefineClick("");
@@ -380,7 +299,7 @@ export default function Home() {
             {showRefinement && transpiledOnce && cooldownTime <= 0 && (
               <div className="hidden lg:block absolute left-1/2 top-full mt-3 -translate-x-1/2 w-[300px] max-w-[90vw] max-h-[80vh] border border-slate-300 dark:border-white/10 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl shadow-2xl rounded-xl z-50 animate-in slide-in-from-top-2 flex flex-col transition-colors overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-white/[0.02]">
-                  <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
+                  <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
                     <Sparkles size={11} />
                     <span className="text-[11px] font-semibold tracking-wide">Refinement Instructions</span>
                   </div>
@@ -392,7 +311,7 @@ export default function Home() {
                   <div className="relative">
                     <Textarea
                       placeholder="e.g. Use explicit JOINs, quote all columns..."
-                      className="w-full resize-none bg-white dark:bg-black/50 border-slate-300 dark:border-white/10 focus-visible:ring-1 focus-visible:ring-indigo-500 text-sm min-h-[60px] placeholder:text-slate-400 dark:placeholder:text-zinc-600 rounded-lg shadow-inner text-slate-800 dark:text-zinc-300 pb-5"
+                      className="w-full resize-none bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 focus-visible:ring-1 focus-visible:ring-blue-500 text-sm min-h-[60px] placeholder:text-slate-400 dark:placeholder:text-zinc-600 rounded-lg shadow-inner text-slate-800 dark:text-zinc-300 pb-5"
                       value={instructions}
                       onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setInstructions(e.target.value)}
                       onKeyDown={(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -420,7 +339,7 @@ export default function Home() {
           <div className="lg:hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200 p-4" onClick={() => setShowRefinement(false)}>
             <div className="w-[92vw] sm:w-[80vw] max-w-sm border border-slate-300 dark:border-white/10 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl shadow-2xl rounded-xl z-50 animate-in zoom-in-95 flex flex-col transition-colors overflow-hidden max-h-[80vh]" onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-white/[0.02] shrink-0">
-                <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
+                <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
                   <Sparkles size={12} />
                   <span className="text-sm font-semibold tracking-wide">Refinement Instructions</span>
                 </div>
@@ -432,7 +351,7 @@ export default function Home() {
                 <div className="relative flex-1 min-h-0">
                   <Textarea
                     placeholder="e.g. Use explicit JOINs, quote all columns..."
-                    className="w-full h-full min-h-[120px] max-h-[40vh] resize-none bg-white dark:bg-black/50 border-slate-300 dark:border-white/10 focus-visible:ring-1 focus-visible:ring-indigo-500 text-sm placeholder:text-slate-400 dark:placeholder:text-zinc-600 rounded-lg shadow-inner text-slate-800 dark:text-zinc-300 pb-6"
+                    className="w-full h-full min-h-[120px] max-h-[40vh] resize-none bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 focus-visible:ring-1 focus-visible:ring-blue-500 text-sm placeholder:text-slate-400 dark:placeholder:text-zinc-600 rounded-lg shadow-inner text-slate-800 dark:text-zinc-300 pb-6"
                     value={instructions}
                     onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setInstructions(e.target.value)}
                     onKeyDown={(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -453,7 +372,7 @@ export default function Home() {
                     if (!isRefining) handleRefineClick(instructions);
                   }}
                   disabled={isRefining}
-                  className="w-full h-11 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-lg shrink-0"
+                  className="w-full h-11 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-lg shrink-0"
                 >
                   {isRefining ? <Loader2 className="animate-spin w-4 h-4 mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
                   Submit
@@ -469,7 +388,7 @@ export default function Home() {
           {/* Pane Toolbar */}
           <div className="h-12 flex items-center px-4 border-b border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-zinc-900/50 shrink-0 justify-between">
             <div className="flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 dark:bg-indigo-400" />
+              <div className="w-1.5 h-1.5 rounded-full bg-blue-500 dark:bg-blue-400" />
               <div className="text-[12px] font-bold text-slate-700 dark:text-zinc-300 tracking-wide uppercase">Output</div>
               {isTranspiling && <Loader2 className="animate-spin w-3.5 h-3.5 text-slate-400 dark:text-zinc-500 ml-2" />}
 
@@ -579,19 +498,7 @@ export default function Home() {
       </div>
 
       {/* AI Explanation — Console-style Output Panel */}
-      {showSummary && (
-        <div className="px-3 sm:px-6 mt-4 mb-6 max-w-[1700px] mx-auto w-full z-10 relative shrink-0">
-          <div className="border border-slate-200 dark:border-white/10 bg-white dark:bg-zinc-900 rounded-xl overflow-hidden shadow-sm">
-            <div className="h-8 flex items-center px-3 sm:px-4 bg-slate-100 dark:bg-zinc-800/80 border-b border-slate-200 dark:border-white/5">
-              <div className="flex items-center gap-2 text-slate-500 dark:text-zinc-400 text-[11px] font-semibold tracking-wide">
-                <Sparkles className="w-3 h-3" />
-                CHANGE SUMMARY
-              </div>
-            </div>
-            <div className="p-3 sm:p-4 text-[12px] sm:text-[13px] text-slate-600 dark:text-zinc-400 leading-relaxed whitespace-pre-wrap font-mono max-h-[30vh] overflow-y-auto min-h-[80px]">{aiExplanation}</div>
-          </div>
-        </div>
-      )}
+      <AIMetadataPanel explanation={showSummary ? aiExplanation : ""} />
 
       <Footer />
     </div>
