@@ -31,29 +31,25 @@ export function TransactionsList({
 }: TransactionsListProps) {
   if (transactions.length === 0) {
     return (
-      <Card className="bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 shadow-sm">
-        <CardHeader className="pb-6">
-          <CardTitle className="flex items-center gap-3 text-xl">
-            <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full">
-              <Database className="w-6 h-6 text-slate-600 dark:text-slate-400" />
-            </div>
+      <Card className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm rounded-md">
+        <CardHeader className="pb-4 border-b border-zinc-100 dark:border-zinc-800 px-6 pt-5">
+          <CardTitle className="text-[13px] font-bold text-slate-800 dark:text-zinc-200 uppercase tracking-widest flex items-center gap-2">
             Recent Translations
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-12">
-            <div className="p-4 bg-slate-100 dark:bg-slate-800 rounded-full w-fit mx-auto mb-6">
-              <Database className="w-12 h-12 text-slate-400 dark:text-slate-600" />
+          <div className="text-center py-16">
+            <div className="p-4 bg-zinc-100 dark:bg-zinc-800/50 rounded-full w-fit mx-auto mb-6">
+              <Database className="w-8 h-8 text-slate-400 dark:text-zinc-500" />
             </div>
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">No translations yet</h3>
-            <p className="text-slate-600 dark:text-zinc-400 mb-6 max-w-md mx-auto">
-              Start translating SQL to see your history here and track your activity!
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-2">No translations yet</h3>
+            <p className="text-sm text-slate-500 dark:text-zinc-400 mb-6 max-w-sm mx-auto">
+              Start translating SQL to see your history here and track your activity.
             </p>
             <Button
               onClick={() => window.location.href = "/"}
-              className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow-md transition-all duration-200"
+              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold transition-colors px-6 h-10 rounded-md"
             >
-              <Database className="w-4 h-4 mr-2" />
               Go to Translator
             </Button>
           </div>
@@ -63,28 +59,25 @@ export function TransactionsList({
   }
 
   return (
-    <Card className="bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 shadow-sm">
-      <CardHeader className="pb-6">
-        <CardTitle className="flex items-center gap-3 text-xl">
-          <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full">
-            <Database className="w-6 h-6 text-slate-600 dark:text-slate-400" />
-          </div>
+    <Card className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm rounded-md overflow-hidden">
+      <CardHeader className="pb-4 border-b border-zinc-200 dark:border-zinc-800 px-6 pt-5 flex flex-row items-center justify-between bg-zinc-50/50 dark:bg-zinc-900/50">
+        <CardTitle className="flex items-center gap-2 text-[13px] font-bold uppercase tracking-widest text-slate-800 dark:text-zinc-200">
           Recent Translations
         </CardTitle>
-        <p className="text-base text-slate-600 dark:text-zinc-400">
-          Your last {transactions.length} SQL translations
+        <p className="text-[11px] font-semibold text-slate-500 dark:text-zinc-500 uppercase tracking-widest hidden sm:block font-mono">
+          {transactions.length} entries
         </p>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-6">
+      <CardContent className="p-0">
+        <div className="divide-y divide-zinc-200 dark:divide-zinc-800 px-6">
           {transactions.map((transaction) => (
             <TransactionItem key={transaction.id} transaction={transaction} />
           ))}
         </div>
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between pt-6 border-t border-slate-200 dark:border-slate-700">
-            <div className="text-sm text-slate-600 dark:text-zinc-400">
+          <div className="flex items-center justify-between px-6 py-4 bg-zinc-50/50 dark:bg-zinc-900/50 border-t border-zinc-200 dark:border-zinc-800">
+            <div className="text-[11px] font-mono font-medium text-slate-500 dark:text-zinc-400 uppercase tracking-wider">
               Page {currentPage} of {totalPages}
             </div>
             <div className="flex items-center gap-2">
@@ -93,18 +86,18 @@ export function TransactionsList({
                 size="sm"
                 onClick={() => onPageChange?.(currentPage - 1)}
                 disabled={currentPage === 1 || loading}
+                className="h-8 text-xs font-semibold px-3 border-zinc-200 dark:border-zinc-800"
               >
-                <ChevronLeft className="w-4 h-4" />
-                Previous
+                Prev
               </Button>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => onPageChange?.(currentPage + 1)}
                 disabled={currentPage === totalPages || loading}
+                className="h-8 text-xs font-semibold px-3 border-zinc-200 dark:border-zinc-800"
               >
                 Next
-                <ChevronRight className="w-4 h-4" />
               </Button>
             </div>
           </div>

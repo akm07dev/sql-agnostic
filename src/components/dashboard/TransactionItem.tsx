@@ -47,74 +47,63 @@ export function TransactionItem({ transaction }: TransactionItemProps) {
 
   return (
     <>
-      <div className="bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl p-6 hover:shadow-lg transition-all duration-200 hover:border-slate-300 dark:hover:border-slate-600">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center gap-3 flex-wrap">
-            <Badge variant="outline" className="px-3 py-1 bg-blue-50 dark:bg-blue-950/50 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 font-medium">
+      <div className="flex flex-col py-5 gap-3 group">
+        <div className="flex items-center justify-between text-xs mb-1">
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-slate-800 dark:text-zinc-200 font-semibold border border-zinc-200 dark:border-zinc-800 px-1.5 py-0.5 rounded-sm bg-zinc-50 dark:bg-zinc-900/50">
               {getDialectLabel(transaction.source_dialect)} → {getDialectLabel(transaction.target_dialect)}
-            </Badge>
-            {transaction.was_ai_refined && (
-              <Badge className="px-3 py-1 bg-purple-100 dark:bg-purple-900/50 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800">
-                ✨ AI Refined
-              </Badge>
-            )}
-          </div>
-          <div className="flex items-center gap-3 flex-wrap">
-            {transaction.rating === 1 && (
-              <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
-                <ThumbsUp className="w-4 h-4" />
-                <span className="text-sm font-medium">Liked</span>
-              </div>
-            )}
-            {transaction.rating === -1 && (
-              <div className="flex items-center gap-1 text-red-600 dark:text-red-400">
-                <ThumbsDown className="w-4 h-4" />
-                <span className="text-sm font-medium">Disliked</span>
-              </div>
-            )}
-            <span className="text-sm text-slate-500 dark:text-zinc-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md">
-              {formatDate(transaction.created_at)}
             </span>
+          </div>
+          <div className="flex items-center gap-3 text-slate-500 dark:text-zinc-400 font-mono text-[11px]">
+            <div className="flex items-center gap-1">
+              {transaction.rating === 1 && <ThumbsUp className="w-3.5 h-3.5 text-green-600 dark:text-green-500" />}
+              {transaction.rating === -1 && <ThumbsDown className="w-3.5 h-3.5 text-red-600 dark:text-red-500" />}
+            </div>
+            {formatDate(transaction.created_at)}
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <h4 className="text-sm font-semibold text-slate-700 dark:text-zinc-300 flex items-center gap-2">
-              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-              Input SQL
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <h4 className="text-[11px] font-semibold text-slate-500 dark:text-zinc-500 uppercase tracking-widest flex items-center justify-between">
+              Input
               {isLongQuery(transaction.input_sql) && (
-                <span className="text-xs text-blue-600 dark:text-blue-400 font-normal cursor-pointer hover:underline" onClick={() => setShowInputModal(true)}>
-                  (Click to expand)
+                <span className="text-blue-600 dark:text-blue-400 cursor-pointer hover:underline normal-case tracking-normal" onClick={() => setShowInputModal(true)}>
+                  expand
                 </span>
               )}
             </h4>
             <div 
-              className={`bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg p-4 min-h-[6rem] ${isLongQuery(transaction.input_sql) ? 'cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800' : ''}`}
+              className={`bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded p-3 h-[92px] relative overflow-hidden ${isLongQuery(transaction.input_sql) ? 'cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-900' : ''}`}
               onClick={() => isLongQuery(transaction.input_sql) && setShowInputModal(true)}
             >
-              <pre className="text-sm text-slate-800 dark:text-slate-200 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">
+              <pre className="text-[11px] text-slate-600 dark:text-zinc-400 whitespace-pre-wrap font-mono leading-relaxed">
                 {truncateSql(transaction.input_sql, 200)}
               </pre>
+              {isLongQuery(transaction.input_sql) && (
+                <div className="absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-zinc-50 dark:from-zinc-950 to-transparent pointer-events-none" />
+              )}
             </div>
           </div>
-          <div className="space-y-2">
-            <h4 className="text-sm font-semibold text-slate-700 dark:text-zinc-300 flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              Output SQL
+          <div className="space-y-1.5">
+            <h4 className="text-[11px] font-semibold text-slate-500 dark:text-zinc-500 uppercase tracking-widest flex items-center justify-between">
+              Output
               {isLongQuery(transaction.output_sql) && (
-                <span className="text-xs text-blue-600 dark:text-blue-400 font-normal cursor-pointer hover:underline" onClick={() => setShowOutputModal(true)}>
-                  (Click to expand)
+                <span className="text-blue-600 dark:text-blue-400 cursor-pointer hover:underline normal-case tracking-normal" onClick={() => setShowOutputModal(true)}>
+                  expand
                 </span>
               )}
             </h4>
             <div 
-              className={`bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-lg p-4 min-h-[6rem] ${isLongQuery(transaction.output_sql) ? 'cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800' : ''}`}
+              className={`bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded p-3 h-[92px] relative overflow-hidden ${isLongQuery(transaction.output_sql) ? 'cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800/80' : ''}`}
               onClick={() => isLongQuery(transaction.output_sql) && setShowOutputModal(true)}
             >
-              <pre className="text-sm text-slate-800 dark:text-slate-200 overflow-x-auto whitespace-pre-wrap font-mono leading-relaxed">
+              <pre className="text-[11px] text-slate-800 dark:text-zinc-300 whitespace-pre-wrap font-mono leading-relaxed">
                 {truncateSql(transaction.output_sql, 200)}
               </pre>
+              {isLongQuery(transaction.output_sql) && (
+                <div className="absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-white dark:from-zinc-900 to-transparent pointer-events-none" />
+              )}
             </div>
           </div>
         </div>

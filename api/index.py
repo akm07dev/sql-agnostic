@@ -266,6 +266,7 @@ class FeedbackMetrics(BaseModel):
     positive_feedback: int
     negative_feedback: int
     positive_percentage: float
+    ai_refined_count: int | None = 0
 
 
 # ---------------------------------------------------------------------------
@@ -446,21 +447,29 @@ def get_user_transactions(request: Request, user_payload: dict = Depends(verify_
     """Get user's recent transactions for dashboard."""
     user_id = user_payload["sub"]
     
-    # Get limit from query param, default to 10
+    # Get pagination params
+    page = int(request.query_params.get("page", 1))
     limit = int(request.query_params.get("limit", 10))
     if limit > 100:
         limit = 100  # Cap at 100
+        
+    offset = (page - 1) * limit
     
     try:
         # Extract JWT token and create authenticated client
         jwt_token = _extract_jwt_from_cookies(request)
         auth_supabase = get_supabase_client_for_user(jwt_token)
         
-        # Get user's translations, ordered by created_at desc, limit to specified
-        response = auth_supabase.table("translations").select("*").eq("user_id", user_id).order("created_at", desc=True).limit(limit).execute()
+        # Get total count
+        count_response = auth_supabase.table("translations").select("*", count="exact", head=True).eq("user_id", user_id).execute()
+        total_count = count_response.count if count_response.count else 0
+        total_pages = max(1, (total_count + limit - 1) // limit)
+        
+        # Get user's transactions, ordered by created_at desc, limit to specified
+        response = auth_supabase.table("translations").select("*").eq("user_id", user_id).order("created_at", desc=True).range(offset, offset + limit - 1).execute()
         transactions = response.data
         
-        return {"transactions": transactions}
+        return {"transactions": transactions, "totalPages": total_pages, "currentPage": page}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch transactions: {str(e)}")
 
@@ -498,6 +507,7 @@ def get_feedback_metrics(request: Request, user_payload: dict = Depends(verify_j
             "positive_feedback": metrics.get("positive_feedback", 0),
             "negative_feedback": metrics.get("negative_feedback", 0),
             "positive_percentage": float(metrics.get("positive_percentage", 0.0)),
+            "ai_refined_count": metrics.get("ai_refined_count", 0),
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch feedback: {str(e)}")
@@ -526,6 +536,7 @@ def get_public_feedback_metrics():
             "positive_feedback": metrics.get("positive_feedback", 0),
             "negative_feedback": metrics.get("negative_feedback", 0),
             "positive_percentage": float(metrics.get("positive_percentage", 0.0)),
+            "ai_refined_count": metrics.get("ai_refined_count", 0),
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch feedback: {str(e)}")

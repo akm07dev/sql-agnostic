@@ -19,13 +19,9 @@ function UpdatePasswordForm() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen h-full w-full bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-300 font-sans items-center justify-center relative selection:bg-indigo-200 dark:selection:bg-indigo-500/30 transition-colors duration-500">
-      <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-500/10 dark:bg-indigo-900/10 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-blue-500/10 dark:bg-blue-900/10 blur-[120px] pointer-events-none" />
+    <div className="flex flex-col min-h-screen h-full w-full bg-zinc-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-300 font-sans items-center justify-center relative selection:bg-blue-200 dark:selection:bg-blue-500/30 transition-colors">
       
-      <div className="flex flex-col w-[90%] sm:max-w-md gap-2 mx-auto z-10 bg-white/70 dark:bg-zinc-950/60 backdrop-blur-xl border border-slate-200 dark:border-white/5 rounded-3xl py-10 px-8 sm:px-12 shadow-2xl transition-colors relative overflow-hidden">
-        
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/50 dark:via-white/10 to-transparent"></div>
+      <div className="flex flex-col w-[90%] sm:max-w-md gap-2 mx-auto z-10 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl py-10 px-8 sm:px-10 shadow-sm relative">
 
         <div className="flex flex-col mb-6 text-left">
           <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Set New Password</h1>
@@ -64,13 +60,13 @@ function UpdatePasswordForm() {
               type="password"
               autoComplete="new-password"
               minLength={6}
-              className="bg-white dark:bg-black/50 border-slate-300 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-600 focus-visible:ring-indigo-500"
+              className="bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-zinc-600 focus-visible:ring-blue-500 rounded-md"
             />
           </div>
           <Button
             type="submit"
             formAction={updatePassword}
-            className="w-full h-11 bg-slate-900 dark:bg-indigo-600 hover:bg-slate-800 dark:hover:bg-indigo-500 text-white dark:text-white shadow-md font-semibold transition-all mt-2"
+            className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white shadow-sm font-semibold transition-colors mt-2 rounded-md"
             disabled={loading}
             onClick={handleSubmit}
           >
@@ -91,7 +87,7 @@ export default function UpdatePasswordPage() {
   return (
     <Suspense fallback={
       <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="animate-spin text-indigo-500" />
+        <Loader2 className="animate-spin text-blue-500" />
       </div>
     }>
       <UpdatePasswordForm />

@@ -12,20 +12,21 @@ interface FeedbackMetrics {
 interface FeedbackChartProps {
   metrics: FeedbackMetrics | null;
   loading: boolean;
+  accent?: "indigo" | "emerald";
 }
 
-export function FeedbackChart({ metrics, loading }: FeedbackChartProps) {
+export function FeedbackChart({ metrics, loading, accent = "indigo" }: FeedbackChartProps) {
   const chartData = metrics ? [
-    { name: "Positive", value: metrics.positive_feedback, color: "#22c55e" },
-    { name: "Negative", value: metrics.negative_feedback, color: "#ef4444" },
+    { name: "Positive", value: metrics.positive_feedback, color: accent === "indigo" ? "#818cf8" : "#34d399" }, // indigo-400 / emerald-400
+    { name: "Negative", value: metrics.negative_feedback, color: accent === "indigo" ? "#c7d2fe" : "#a7f3d0" }, // indigo-200 / emerald-200
   ] : [];
 
   return (
-    <Card className="bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 shadow-sm">
-      <CardHeader className="pb-4">
-        <CardTitle className="text-lg font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-          <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-full">
-            <BarChart3 className="h-5 w-5 text-slate-600 dark:text-slate-400" />
+    <Card className="bg-white dark:bg-zinc-900 border-slate-200 dark:border-white/10 shadow-[0_0_20px_rgba(0,0,0,0.03)] dark:shadow-[0_0_20px_rgba(0,0,0,0.2)] h-full">
+      <CardHeader className="pb-2 border-b border-slate-100 dark:border-white/5 mx-6 px-0 pt-6">
+        <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-zinc-300 flex items-center gap-2">
+          <div className={`p-1.5 ${accent === "indigo" ? "bg-indigo-100 dark:bg-indigo-500/20" : "bg-emerald-100 dark:bg-emerald-500/20"} rounded-md`}>
+            <BarChart3 className={`h-3 w-3 ${accent === "indigo" ? "text-indigo-600 dark:text-indigo-400" : "text-emerald-600 dark:text-emerald-400"}`} />
           </div>
           Feedback Distribution
         </CardTitle>
@@ -42,11 +43,12 @@ export function FeedbackChart({ metrics, loading }: FeedbackChartProps) {
                 data={chartData}
                 cx="50%"
                 cy="50%"
-                innerRadius={50}
-                outerRadius={90}
-                paddingAngle={2}
+                innerRadius={65}
+                outerRadius={85}
+                paddingAngle={5}
                 dataKey="value"
                 stroke="none"
+                cornerRadius={4}
               >
                 {chartData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />

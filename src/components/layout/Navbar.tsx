@@ -1,11 +1,11 @@
-﻿"use client";
+"use client";
 
 import { Moon, Sun, Loader2, LogOut, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { User } from "@supabase/supabase-js";
 import { useTheme } from "next-themes";
-import { useSyncExternalStore } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -16,14 +16,14 @@ interface NavbarProps {
 }
 
 export function Navbar({ user, authLoading, onSignOut }: NavbarProps) {
-  const isClient = useSyncExternalStore(
-    () => () => {},
-    () => true,
-    () => false
-  );
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  
   const { theme, setTheme, systemTheme } = useTheme();
-  const selectedTheme = isClient ? (theme || "system") : "system";
-  const isDarkTheme = selectedTheme === "dark" || (selectedTheme === "system" && systemTheme === "dark");
+  
+  // Force server state until mounted to prevent hydration errors in SelectValue
+  const selectedTheme = mounted ? (theme || "system") : "system";
+  const isDarkTheme = mounted && (selectedTheme === "dark" || (selectedTheme === "system" && systemTheme === "dark"));
 
   return (
     <header className="h-14 shrink-0 border-b border-slate-200 dark:border-white/5 bg-white/70 dark:bg-zinc-950/60 backdrop-blur-xl flex items-center justify-between px-3 sm:px-6 z-20 relative">
@@ -48,11 +48,11 @@ export function Navbar({ user, authLoading, onSignOut }: NavbarProps) {
           value={selectedTheme}
           onValueChange={(v) => { if (v) setTheme(v); }}
         >
-          <SelectTrigger className="h-8 w-auto px-2 sm:px-3 border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-zinc-900 rounded-full text-xs font-semibold shadow-sm focus:ring-1 focus:ring-indigo-500/50">
+          <SelectTrigger className="h-8 w-auto px-2 sm:px-3 border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 rounded-full text-xs font-semibold shadow-sm focus:ring-1 focus:ring-blue-500/50">
             <div className="flex items-center gap-2">
               {isDarkTheme
-                ? <Moon className="w-3.5 h-3.5 text-indigo-400" /> 
-                : <Sun className="w-3.5 h-3.5 text-yellow-500" />
+                ? <Moon className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400" /> 
+                : <Sun className="w-3.5 h-3.5 text-blue-600 dark:text-blue-500" />
               }
               <span className="hidden sm:inline"><SelectValue /></span>
             </div>
@@ -110,7 +110,7 @@ export function Navbar({ user, authLoading, onSignOut }: NavbarProps) {
               variant="default"
               size="sm"
               onClick={() => window.location.href = "/login"}
-              className="h-8 text-xs px-3 sm:px-4 bg-slate-900 dark:bg-white text-white dark:text-black hover:bg-slate-800 dark:hover:bg-zinc-200 rounded-md font-semibold transition-all duration-300 shadow-md dark:shadow-lg"
+              className="h-8 text-xs px-3 sm:px-4 bg-zinc-900 dark:bg-white text-white dark:text-black hover:bg-zinc-800 dark:hover:bg-zinc-200 rounded-md font-semibold transition-all duration-300 shadow-sm"
             >
               <span className="hidden sm:inline">Sign In</span>
               <span className="sm:hidden">Login</span>

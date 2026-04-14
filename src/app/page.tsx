@@ -211,14 +211,8 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen w-full bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-300 font-sans relative selection:bg-indigo-200 dark:selection:bg-indigo-500/30 transition-colors duration-500 overflow-x-hidden">
+    <div className="flex flex-col min-h-screen w-full bg-zinc-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-300 font-sans relative selection:bg-blue-200 dark:selection:bg-blue-500/30 transition-colors duration-500 overflow-x-hidden">
       <JsonLd />
-
-      {/* Background decorations - isolated in overflow-hidden container */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-500/10 dark:bg-indigo-900/10 blur-[120px]" />
-        <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-blue-500/10 dark:bg-blue-900/10 blur-[120px]" />
-      </div>
 
       <Navbar user={user} authLoading={authLoading} onSignOut={handleSignOut} />
 
@@ -242,7 +236,7 @@ export default function Home() {
             setCurrentRating(null);
           }
         }}>
-          <SelectTrigger className="w-[180px] h-[36px] border border-slate-300 dark:border-white/10 bg-white dark:bg-zinc-900 text-sm font-semibold rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500/50 dark:focus:ring-indigo-500/40">
+          <SelectTrigger className="w-[180px] h-[36px] border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-sm font-semibold rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500/50 dark:focus:ring-blue-500/40">
             <span className="flex items-center gap-2 truncate">
               <DialectIcon icon={getDialect(sourceDialect)?.icon ?? ""} className="w-4 h-4 shrink-0" />
               {getDialect(sourceDialect)?.label || sourceDialect}
@@ -275,7 +269,7 @@ export default function Home() {
             setCurrentRating(null);
           }
         }}>
-          <SelectTrigger className="w-[180px] h-[36px] border border-indigo-200 dark:border-indigo-500/20 bg-indigo-50/50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 text-sm font-semibold rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500/50">
+          <SelectTrigger className="w-[180px] h-[36px] border border-blue-200 dark:border-blue-500/20 bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 text-sm font-semibold rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500/50">
             <span className="flex items-center gap-2 truncate">
               <DialectIcon icon={getDialect(targetDialect)?.icon ?? ""} className="w-4 h-4 shrink-0" />
               {getDialect(targetDialect)?.label || targetDialect}
@@ -337,7 +331,7 @@ export default function Home() {
           <Button
             onClick={handleTranspileClick}
             disabled={isTranspiling}
-            className="w-14 h-14 lg:w-14 lg:h-14 rounded-full bg-indigo-600 hover:bg-indigo-500 text-white shadow-[0_0_20px_rgba(79,70,229,0.3)] hover:shadow-[0_0_30px_rgba(79,70,229,0.5)] transition-all duration-300 font-semibold border-4 border-slate-50 dark:border-zinc-950 flex shadow-indigo-600/30 items-center justify-center p-0"
+            className="w-14 h-14 lg:w-14 lg:h-14 rounded-full bg-blue-600 hover:bg-blue-500 text-white shadow-sm transition-all duration-300 font-semibold border-4 border-zinc-50 dark:border-zinc-950 flex items-center justify-center p-0"
             title="Transpile Code"
           >
             {isTranspiling ? <Loader2 className="animate-spin w-6 h-6 lg:w-6 lg:h-6" /> : <ChevronRight className="w-8 h-8 lg:w-8 lg:h-8 ml-0.5" />}
@@ -347,7 +341,7 @@ export default function Home() {
             <Button
               variant="outline"
               disabled={!transpiledOnce || cooldownTime > 0}
-              className={`w-12 h-12 lg:w-12 lg:h-12 rounded-full bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 text-indigo-600 dark:text-indigo-400 border border-slate-200 dark:border-white/10 shadow-lg hover:shadow-xl transition-all duration-300 p-0 disabled:opacity-60 disabled:hover:bg-white dark:disabled:hover:bg-zinc-900 disabled:text-slate-400 dark:disabled:text-slate-500 disabled:cursor-not-allowed ${cooldownTime > 0 ? 'animate-unlock-glow' : ''}`}
+              className={`w-12 h-12 lg:w-12 lg:h-12 rounded-full bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 text-blue-600 dark:text-blue-400 border border-zinc-200 dark:border-zinc-800 shadow-sm transition-all duration-300 p-0 disabled:opacity-60 disabled:hover:bg-white dark:disabled:hover:bg-zinc-900 disabled:text-slate-400 dark:disabled:text-slate-500 disabled:cursor-not-allowed`}
               onClick={() => {
                 if (!transpiledOnce || cooldownTime > 0) return;
                 if (!user) return window.location.href = "/login";
@@ -382,7 +376,7 @@ export default function Home() {
             {showRefinement && transpiledOnce && cooldownTime <= 0 && (
               <div className="hidden lg:block absolute left-1/2 top-full mt-3 -translate-x-1/2 w-[300px] max-w-[90vw] max-h-[80vh] border border-slate-300 dark:border-white/10 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl shadow-2xl rounded-xl z-50 animate-in slide-in-from-top-2 flex flex-col transition-colors overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-white/[0.02]">
-                  <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
+                  <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
                     <Sparkles size={11} />
                     <span className="text-[11px] font-semibold tracking-wide">Refinement Instructions</span>
                   </div>
@@ -394,7 +388,7 @@ export default function Home() {
                   <div className="relative">
                     <Textarea
                       placeholder="e.g. Use explicit JOINs, quote all columns..."
-                      className="w-full resize-none bg-white dark:bg-black/50 border-slate-300 dark:border-white/10 focus-visible:ring-1 focus-visible:ring-indigo-500 text-sm min-h-[60px] placeholder:text-slate-400 dark:placeholder:text-zinc-600 rounded-lg shadow-inner text-slate-800 dark:text-zinc-300 pb-5"
+                      className="w-full resize-none bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 focus-visible:ring-1 focus-visible:ring-blue-500 text-sm min-h-[60px] placeholder:text-slate-400 dark:placeholder:text-zinc-600 rounded-lg shadow-inner text-slate-800 dark:text-zinc-300 pb-5"
                       value={instructions}
                       onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setInstructions(e.target.value)}
                       onKeyDown={(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -422,7 +416,7 @@ export default function Home() {
           <div className="lg:hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200 p-4" onClick={() => setShowRefinement(false)}>
             <div className="w-[92vw] sm:w-[80vw] max-w-sm border border-slate-300 dark:border-white/10 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-xl shadow-2xl rounded-xl z-50 animate-in zoom-in-95 flex flex-col transition-colors overflow-hidden max-h-[80vh]" onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-white/5 bg-slate-50/50 dark:bg-white/[0.02] shrink-0">
-                <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
+                <div className="flex items-center gap-2 text-blue-600 dark:text-blue-400">
                   <Sparkles size={12} />
                   <span className="text-sm font-semibold tracking-wide">Refinement Instructions</span>
                 </div>
@@ -434,7 +428,7 @@ export default function Home() {
                 <div className="relative flex-1 min-h-0">
                   <Textarea
                     placeholder="e.g. Use explicit JOINs, quote all columns..."
-                    className="w-full h-full min-h-[120px] max-h-[40vh] resize-none bg-white dark:bg-black/50 border-slate-300 dark:border-white/10 focus-visible:ring-1 focus-visible:ring-indigo-500 text-sm placeholder:text-slate-400 dark:placeholder:text-zinc-600 rounded-lg shadow-inner text-slate-800 dark:text-zinc-300 pb-6"
+                    className="w-full h-full min-h-[120px] max-h-[40vh] resize-none bg-white dark:bg-zinc-950 border-zinc-200 dark:border-zinc-800 focus-visible:ring-1 focus-visible:ring-blue-500 text-sm placeholder:text-slate-400 dark:placeholder:text-zinc-600 rounded-lg shadow-inner text-slate-800 dark:text-zinc-300 pb-6"
                     value={instructions}
                     onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setInstructions(e.target.value)}
                     onKeyDown={(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -455,7 +449,7 @@ export default function Home() {
                     if (!isRefining) handleRefineClick(instructions);
                   }}
                   disabled={isRefining}
-                  className="w-full h-11 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold rounded-lg shrink-0"
+                  className="w-full h-11 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-lg shrink-0"
                 >
                   {isRefining ? <Loader2 className="animate-spin w-4 h-4 mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
                   Submit
@@ -471,7 +465,7 @@ export default function Home() {
           {/* Pane Toolbar */}
           <div className="h-12 flex items-center px-4 border-b border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-zinc-900/50 shrink-0 justify-between">
             <div className="flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 dark:bg-indigo-400" />
+              <div className="w-1.5 h-1.5 rounded-full bg-blue-500 dark:bg-blue-400" />
               <div className="text-[12px] font-bold text-slate-700 dark:text-zinc-300 tracking-wide uppercase">Output</div>
               {isTranspiling && <Loader2 className="animate-spin w-3.5 h-3.5 text-slate-400 dark:text-zinc-500 ml-2" />}
 
