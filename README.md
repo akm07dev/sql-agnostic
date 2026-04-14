@@ -1,4 +1,4 @@
-﻿# SQLAgnostic
+# SQLAgnostic
 
 <p align="center">
   <strong>Convert SQL queries between 31+ database dialects</strong>
@@ -74,6 +74,8 @@ flowchart LR
 | 🆚 **Visual Diff** | Side-by-side comparison of transpiler vs AI output |
 | 🔐 **Secure Auth** | JWT verification via JWKS, CSRF protection, tiered rate limiting |
 | 💰 **Free Tier** | 5 conversions/min as guest, 20/min when signed in |
+| 📊 **Activity Dashboard** | Global vs personal KPI comparison: usage, AI refinements, approval rating, positive ratings |
+| 💾 **Session Persistence** | Editor state saved to sessionStorage — survive login redirects without losing work |
 
 ## 🛠️ Tech Stack
 
@@ -122,7 +124,9 @@ flowchart TD
     UI --> Hooks --> Service --> RateLimit --> Auth
     Auth --> Translate --> SQLGlot[("SQLGlot")]
     Auth --> Refine --> Groq
-    Auth -.-> Supabase
+    Auth --> PublicAPI["GET /api/public/*"]
+    Auth --> PersonalAPI["GET /api/personal/*"]
+    Auth -.-Supabase
     
     style Frontend fill:#e0e7ff,stroke:#4f46e5
     style Backend fill:#dcfce7,stroke:#22c55e
@@ -155,36 +159,71 @@ flowchart TD
 ```
 sql-agnostic/
 ├── api/
-│   └── index.py              # FastAPI: endpoints, auth, rate limits, AI pipeline
+│   └── index.py                   # FastAPI: all endpoints, auth, rate limits, AI pipeline
 ├── docs/
-│   ├── ARCHITECTURE.md       # System architecture & diagrams
-│   ├── API.md                # API reference
-│   ├── DEPLOYMENT.md         # Deployment guide
-│   └── WALKTHROUGH.md        # Engineering decisions
+│   ├── ARCHITECTURE.md
+│   ├── API.md
+│   └── DEPLOYMENT.md
+├── supabase/
+│   └── migrations/
+│       ├── 0001_profiles_table.sql
+│       ├── 0002_translations_table.sql  # Compound index (user_id, created_at DESC)
+│       ├── 0003_feedback_table.sql
+│       └── 0004_feedback_aggregates.sql # SECURITY DEFINER RPCs
 ├── src/
+│   ├── proxy.ts                   # Next.js 16 middleware (session refresh)
 │   ├── app/
-│   │   ├── page.tsx          # Main SQL workbench UI
-│   │   ├── layout.tsx        # Root layout with SEO
-│   │   ├── manifest.ts       # PWA manifest
-│   │   ├── opengraph-image.tsx  # Dynamic OG images
-│   │   ├── sitemap.ts        # Sitemap generation
-│   │   └── login/
-│   │       └── actions.ts    # Auth server actions
+│   │   ├── page.tsx               # Main SQL workbench
+│   │   ├── layout.tsx             # Root layout + SEO metadata
+│   │   ├── icon.tsx               # Dynamic favicon (edge ImageResponse)
+│   │   ├── opengraph-image.tsx    # OG card (Zinc-950 dark, Blue-600)
+│   │   ├── twitter-image.tsx      # Twitter card (same theme)
+│   │   ├── manifest.ts            # PWA manifest
+│   │   ├── sitemap.ts
+│   │   ├── robots.ts
+│   │   ├── globals.css
+│   │   ├── dashboard/page.tsx     # Activity dashboard
+│   │   ├── metrics/page.tsx       # Redirects → /dashboard
+│   │   ├── login/
+│   │   │   ├── page.tsx
+│   │   │   ├── actions.ts         # Server actions: signUp, signIn, signOut, reset
+│   │   │   ├── reset/
+│   │   │   └── update-password/
+│   │   └── auth/callback/         # OAuth callback handler
 │   ├── components/
-│   │   ├── layout/           # Navbar, Footer
-│   │   └── seo/              # JsonLd structured data
+│   │   ├── layout/
+│   │   │   ├── Navbar.tsx
+│   │   │   └── Footer.tsx
+│   │   ├── editor/
+│   │   │   ├── AdaptiveEditor.tsx         # Monaco (desktop) / CodeMirror (mobile)
+│   │   │   ├── DesktopMonacoEditor.tsx
+│   │   │   ├── MobileCodeMirrorEditor.tsx
+│   │   │   ├── EditorToolbar.tsx
+│   │   │   └── AIMetadataPanel.tsx
+│   │   ├── dashboard/
+│   │   │   ├── FeedbackSection.tsx        # Global vs You KPI grid
+│   │   │   ├── MetricCard.tsx
+│   │   │   ├── FeedbackChart.tsx          # Recharts pie chart
+│   │   │   ├── TransactionsList.tsx       # Paginated history + skeleton loader
+│   │   │   ├── TransactionItem.tsx
+│   │   │   └── QueryModal.tsx
+│   │   ├── seo/JsonLd.tsx
+│   │   └── theme-provider.tsx
 │   ├── hooks/
-│   │   ├── useAuth.ts        # Supabase auth state
-│   │   └── useSql.ts         # SQL workflow state
+│   │   ├── useAuth.ts             # Supabase auth state
+│   │   ├── useSql.ts              # SQL workflow + sessionStorage persistence
+│   │   └── useIsMobile.ts         # Responsive breakpoint
 │   ├── services/
-│   │   └── sqlService.ts     # API client singleton
+│   │   ├── sqlService.ts          # translate() + refine() API calls
+│   │   └── dbService.ts           # saveTranslation(), updateTranslation(), saveFeedback()
 │   ├── lib/
-│   │   ├── constants.ts      # App config & limits
-│   │   └── dialects.ts       # 31 SQL dialect definitions
-│   └── types/
-│       └── sql.ts            # TypeScript API types
-├── public/                   # Static assets
-└── AGENTS.md                 # AI assistant context
+│   │   ├── constants.ts           # SQL_LIMITS, AUTH_MESSAGES, API_ENDPOINTS
+│   │   ├── dialects.ts            # 31 dialect definitions
+│   │   └── utils.ts               # cn() utility
+│   ├── types/sql.ts
+│   └── utils/supabase/            # Supabase client factories
+├── public/
+└── AGENTS.md                      # AI assistant context (this file)
 ```
 
 ## 🔒 Security Model
