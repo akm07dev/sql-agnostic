@@ -1,6 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Copy, Check } from "lucide-react";
+import { Copy, Check, X } from "lucide-react";
 import { useState, useEffect } from "react";
 
 interface QueryModalProps {
@@ -36,7 +36,7 @@ export function QueryModal({ isOpen, onClose, title, query }: QueryModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[80vh]">
+      <DialogContent showCloseButton={false} className="max-w-4xl max-h-[80vh]">
         <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <DialogTitle className="text-lg font-semibold">{title}</DialogTitle>
           <div className="flex items-center gap-2">
@@ -57,6 +57,15 @@ export function QueryModal({ isOpen, onClose, title, query }: QueryModalProps) {
                   Copy
                 </>
               )}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onClose}
+              className="flex items-center gap-2"
+            >
+              <X className="w-4 h-4" />
+              Close
             </Button>
           </div>
         </DialogHeader>

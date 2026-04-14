@@ -17,6 +17,8 @@ RETURNS TABLE(
 )
 LANGUAGE SQL
 STABLE
+SECURITY DEFINER
+SET search_path = public
 AS $$
 SELECT
     COUNT(f.id) FILTER (WHERE f.is_positive IS NOT NULL)::INT AS total_feedback,
@@ -77,6 +79,8 @@ RETURNS TABLE(
 )
 LANGUAGE SQL
 STABLE
+SECURITY DEFINER
+SET search_path = public
 AS $$
 SELECT
     COUNT(*) FILTER (WHERE rating IS NOT NULL)::INT AS total_feedback,

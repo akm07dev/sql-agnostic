@@ -29,6 +29,34 @@ export function TransactionsList({
   onPageChange,
   loading = false 
 }: TransactionsListProps) {
+  if (loading && transactions.length === 0) {
+    return (
+      <Card className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm rounded-md overflow-hidden">
+        <CardHeader className="pb-4 border-b border-zinc-200 dark:border-zinc-800 px-6 pt-5 flex flex-row items-center justify-between bg-zinc-50/50 dark:bg-zinc-900/50">
+          <CardTitle className="flex items-center gap-2 text-[13px] font-bold uppercase tracking-widest text-slate-800 dark:text-zinc-200">
+            Recent Translations
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="divide-y divide-zinc-200 dark:divide-zinc-800 px-6">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="flex flex-col py-5 gap-3">
+                <div className="flex items-center justify-between mb-1">
+                  <div className="h-5 w-24 bg-slate-100 dark:bg-zinc-800/80 animate-pulse rounded" />
+                  <div className="h-4 w-32 bg-slate-100 dark:bg-zinc-800/80 animate-pulse rounded" />
+                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div className="h-[92px] bg-slate-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800/50 rounded animate-pulse" />
+                  <div className="h-[92px] bg-slate-50 dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800/50 rounded animate-pulse" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   if (transactions.length === 0) {
     return (
       <Card className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm rounded-md">

@@ -442,7 +442,7 @@ def refine_sql(
         return {"success": False, "error": str(e)}
 
 
-@app.get("/api/dashboard/transactions")
+@app.get("/api/personal/transactions")
 def get_user_transactions(request: Request, user_payload: dict = Depends(verify_jwt_cookie)):
     """Get user's recent transactions for dashboard."""
     user_id = user_payload["sub"]
@@ -474,7 +474,7 @@ def get_user_transactions(request: Request, user_payload: dict = Depends(verify_
         raise HTTPException(status_code=500, detail=f"Failed to fetch transactions: {str(e)}")
 
 
-@app.get("/api/dashboard/feedback")
+@app.get("/api/personal/feedback")
 def get_feedback_metrics(request: Request, user_payload: dict = Depends(verify_jwt_cookie)):
     """Get feedback metrics for the authenticated user only using a database-side aggregation.
 
@@ -513,7 +513,7 @@ def get_feedback_metrics(request: Request, user_payload: dict = Depends(verify_j
         raise HTTPException(status_code=500, detail=f"Failed to fetch feedback: {str(e)}")
 
 
-@app.get("/api/feedback")
+@app.get("/api/public/feedback")
 def get_public_feedback_metrics():
     """Get aggregate feedback metrics (public endpoint, no transaction context) using database-side aggregation."""
     try:

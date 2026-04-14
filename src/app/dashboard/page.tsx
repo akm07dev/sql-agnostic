@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
@@ -42,39 +42,58 @@ export default function Dashboard() {
   const [totalPages, setTotalPages] = useState(1);
   const [transactionsLoading, setTransactionsLoading] = useState(false);
 
+  const hasFetchedPublic = React.useRef(false);
+  const hasFetchedPersonal = React.useRef(false);
+  const lastFetchedPage = React.useRef(-1);
+
+  // 1. Fetch public feedback only ONCE
   useEffect(() => {
+    if (hasFetchedPublic.current) return;
+    hasFetchedPublic.current = true;
+    loadFeedback("public");
+  }, []);
+
+  // 2. Fetch personal feedback only ONCE when user gets populated
+  useEffect(() => {
+    if (authLoading || !user || hasFetchedPersonal.current) return;
+    hasFetchedPersonal.current = true;
+    loadFeedback("personal");
+  }, [user, authLoading]);
+
+  // 3. Fetch transactions when user activates, or currentPage shifts
+  useEffect(() => {
+    if (authLoading || !user) {
+      if (!authLoading && !user) setLoading(false);
+      return;
+    }
+
+    if (lastFetchedPage.current === currentPage) return;
+    lastFetchedPage.current = currentPage;
+
     const fetchTransactions = async () => {
-      if (user) {
-        try {
-          const transRes = await fetch(`/api/dashboard/transactions?limit=10&page=${currentPage}`);
-          if (transRes.ok) {
-            const transData = await transRes.json();
-            setTransactions(transData.transactions);
-            setTotalPages(transData.totalPages || 1);
-          }
-        } catch (error) {
-          console.error("Failed to fetch transactions:", error);
+      setTransactionsLoading(true);
+      try {
+        const transRes = await fetch(`/api/personal/transactions?limit=10&page=${currentPage}`);
+        if (transRes.ok) {
+          const transData = await transRes.json();
+          setTransactions(transData.transactions);
+          setTotalPages(transData.totalPages || 1);
         }
+      } catch (error) {
+        console.error("Failed to fetch transactions:", error);
+      } finally {
+        setTransactionsLoading(false);
+        setLoading(false);
       }
-      setLoading(false);
     };
 
-    if (!authLoading) {
-      fetchTransactions();
-      loadFeedback("public");
-      if (user) {
-        loadFeedback("personal");
-      }
-    }
+    fetchTransactions();
   }, [user, authLoading, currentPage]);
 
   const loadFeedback = async (type: "personal" | "public") => {
-    if (type === "personal" && feedbackMetrics) return;
-    if (type === "public" && publicFeedbackMetrics) return;
-
-    const setLoading = type === "personal" ? setFeedbackLoading : setPublicFeedbackLoading;
+    const setLoader = type === "personal" ? setFeedbackLoading : setPublicFeedbackLoading;
     const setMetrics = type === "personal" ? setFeedbackMetrics : setPublicFeedbackMetrics;
-    const url = type === "personal" ? "/api/dashboard/feedback" : "/api/feedback";
+    const url = type === "personal" ? "/api/personal/feedback" : "/api/public/feedback";
 
     setLoading(true);
     try {
@@ -129,12 +148,12 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 relative selection:bg-blue-200 dark:selection:bg-blue-500/30 transition-colors">
+    <div className="min-h-screen flex flex-col bg-zinc-50 dark:bg-zinc-950 relative selection:bg-blue-200 dark:selection:bg-blue-500/30 transition-colors">
 
 
       <Navbar user={user} authLoading={authLoading} onSignOut={signOut} />
 
-      <main className="container mx-auto px-4 sm:px-6 py-8 max-w-[1700px] relative z-10 w-full lg:w-4/5 xl:w-[65%]">
+      <main className="flex-1 container mx-auto px-4 sm:px-6 py-8 max-w-[1700px] relative z-10 w-full lg:w-4/5 xl:w-[65%]">
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
@@ -143,16 +162,13 @@ export default function Dashboard() {
         </div>
 
         {/* Top Analytics row */}
-        <div className="mb-6">
+        <div className="mb-6 w-full">
           <FeedbackSection
              user={user}
              feedbackMetrics={feedbackMetrics}
              publicFeedbackMetrics={publicFeedbackMetrics}
              feedbackLoading={feedbackLoading}
              publicFeedbackLoading={publicFeedbackLoading}
-             accordionValue={accordionValue}
-             onAccordionChange={handleAccordionChange}
-             loadFeedback={loadFeedback}
            />
         </div>
 

@@ -10,13 +10,6 @@ export function Footer() {
   return (
     <footer className="min-h-7 shrink-0 border-t border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-zinc-950 flex flex-col sm:flex-row items-center sm:justify-between px-4 sm:px-6 py-2 sm:py-0 text-[11px] text-slate-500 dark:text-zinc-500 font-mono z-20 transition-colors gap-2 sm:gap-0">
       <div className="flex flex-col items-center sm:flex-row sm:items-center gap-1 sm:gap-5">
-        <span className="flex items-center gap-2 cursor-default">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 dark:bg-green-400 opacity-30 dark:opacity-20"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-green-600 dark:bg-green-500"></span>
-          </span>
-          Transpiler Online
-        </span>
         <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-5 text-center">
           <span className="text-[10px] sm:text-[11px] opacity-80 cursor-default">
             Built with ❤️ by <a href={APP_LINKS.GITHUB} target="_blank" rel="noopener noreferrer" className="font-semibold text-blue-600 dark:text-blue-400 hover:underline">Ankit Megotia</a>
