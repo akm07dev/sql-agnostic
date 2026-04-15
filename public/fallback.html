@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Error | SQLAgnostic</title>
+    <style>
+        :root {
+            --foreground-rgb: 0, 0, 0;
+            --background-start-rgb: 214, 219, 220;
+            --background-end-rgb: 255, 255, 255;
+            color-scheme: light dark;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --foreground-rgb: 255, 255, 255;
+                --background-start-rgb: 0, 0, 0;
+                --background-end-rgb: 0, 0, 0;
+            }
+        }
+
+        body {
+            color: rgb(var(--foreground-rgb));
+            background: rgb(var(--background-start-rgb));
+            font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            background: rgba(var(--foreground-rgb), 0.05);
+            border: 1px solid rgba(var(--foreground-rgb), 0.1);
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        h1 {
+            margin-top: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        p {
+            line-height: 1.6;
+            margin-bottom: 24px;
+            color: rgba(var(--foreground-rgb), 0.8);
+        }
+
+        .icon {
+            margin-bottom: 20px;
+        }
+
+        .icon svg {
+            width: 48px;
+            height: 48px;
+            stroke: #ef4444;
+        }
+
+        button {
+            background: rgb(var(--foreground-rgb));
+            color: rgb(var(--background-start-rgb));
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+        </div>
+        <h1>Connection Interrupted</h1>
+        <p>
+            We apologize, but SQLAgnostic could not load properly. This is almost always caused by strict corporate firewalls, VPNs, or network tracking prevention software (like Zscaler) blocking standard JavaScript files.
+        </p>
+        <p>
+            To continue transpiling your queries, please try switching to a personal network, disabling your VPN temporarily, or accessing the website from your mobile device.
+        </p>
+        <button onclick="window.location.href='/'">Try Loading Again</button>
+    </div>
+</body>
+</html>

@@ -114,6 +114,30 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       suppressHydrationWarning
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              // Catch raw script loading hardware/network failures (e.g. Zscaler blocking React DOM chunk)
+              window.addEventListener('error', function(e) {
+                if (e.target && e.target.tagName === 'SCRIPT') {
+                  var src = e.target.src || '';
+                  if (src.includes('/_next/static/chunks/')) {
+                    window.location.replace('/fallback.html');
+                  }
+                }
+              }, true);
+            
+              // Triggered during Next.js routing/dynamic imports when a file block occurs
+              window.addEventListener('unhandledrejection', function(e) {
+                if (e.reason && e.reason.name === 'ChunkLoadError') {
+                  window.location.replace('/fallback.html');
+                }
+              });
+            `,
+          }}
+        />
+      </head>
       <body className="flex flex-col">
         <ThemeProvider
           attribute="class"

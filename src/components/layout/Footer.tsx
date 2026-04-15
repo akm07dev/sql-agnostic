@@ -15,10 +15,7 @@ export function Footer() {
           <span className="text-[10px] sm:text-[11px] opacity-80 cursor-default">
             Powered by <a href="https://supabase.com" target="_blank" rel="noopener noreferrer" className="font-semibold text-emerald-600 dark:text-emerald-400 hover:underline decoration-emerald-500/30 underline-offset-2 transition-colors">Supabase</a>, <a href="https://github.com/tobymao/sqlglot" target="_blank" rel="noopener noreferrer" className="font-semibold text-blue-600 dark:text-blue-400 hover:underline decoration-blue-500/30 underline-offset-2 transition-colors">SQLGlot</a> & <a href="https://groq.com" target="_blank" rel="noopener noreferrer" className="font-semibold text-zinc-700 dark:text-zinc-300 hover:underline decoration-zinc-500/30 underline-offset-2 transition-colors">Groq</a> on <a href="https://vercel.com" target="_blank" rel="noopener noreferrer" className="font-semibold text-zinc-900 dark:text-zinc-100 hover:underline decoration-zinc-500/30 underline-offset-2 transition-colors">Vercel</a>
           </span>
-          <span className="hidden md:inline text-slate-300 dark:text-zinc-700">|</span>
-          <span className="text-[9px] text-slate-400 dark:text-zinc-500 italic max-w-[200px] sm:max-w-none text-center">
-            *Deployed on free tier (may experience issues on strict corporate networks)
-          </span>
+
           <span className="sm:hidden text-[9px] text-slate-400 dark:text-zinc-500 italic">
             💻 Desktop recommended
           </span>
