@@ -16,6 +16,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useSql } from "@/hooks/useSql";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { AdaptiveEditor } from "@/components/editor/AdaptiveEditor";
+import "@/lib/monaco-config";
 import { DiffEditor } from "@monaco-editor/react";
 import { EditorToolbar } from "@/components/editor/EditorToolbar";
 import { AIMetadataPanel } from "@/components/editor/AIMetadataPanel";
