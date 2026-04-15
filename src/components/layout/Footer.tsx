@@ -1,10 +1,7 @@
 "use client";
 
 import React from "react";
-import Image from "next/image";
 import { APP_LINKS } from "@/lib/constants";
-
-const SIMPLE_ICON = (slug: string) => `https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/${slug}.svg`;
 
 export function Footer() {
   return (
@@ -29,23 +26,13 @@ export function Footer() {
       </div>
       <div className="flex items-center gap-4 text-[11px] font-semibold tracking-tight font-mono">
         <a href={APP_LINKS.GITHUB} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 hover:text-slate-900 dark:hover:text-white transition-colors">
-          <Image
-            src={SIMPLE_ICON("github")}
-            alt="GitHub"
-            width={12}
-            height={12}
-            className="opacity-80 dark:invert"
-          />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/icons/github.svg" alt="" width={12} height={12} className="w-3 h-3 opacity-80 dark:invert" />
           GitHub
         </a>
         <a href={APP_LINKS.LINKEDIN} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 hover:text-slate-900 dark:hover:text-white transition-colors">
-          <Image
-            src={SIMPLE_ICON("linkedin")}
-            alt="LinkedIn"
-            width={12}
-            height={12}
-            className="opacity-80 dark:invert"
-          />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/icons/linkedin.svg" alt="" width={12} height={12} className="w-3 h-3 opacity-80 dark:invert" />
           LinkedIn
         </a>
       </div>

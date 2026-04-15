@@ -1,5 +1,4 @@
 import React from "react";
-import Image from "next/image";
 import { ArrowLeftRight } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectGroup, SelectLabel, SelectSeparator } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -7,7 +6,8 @@ import { getCategorizedDialects, type SqlDialect } from "@/lib/dialects";
 
 const DialectIcon = ({ icon, className = "w-4 h-4" }: { icon: string; className?: string }) => (
   <span className="inline-flex items-center justify-center shrink-0 w-5 h-5 rounded bg-slate-100 dark:bg-zinc-800 p-0.5">
-    <Image src={icon} alt="" width={20} height={20} className={`${className} dark:invert opacity-80 object-contain`} />
+    {/* eslint-disable-next-line @next/next/no-img-element */}
+    <img src={icon} alt="" width={20} height={20} className={`${className} dark:invert opacity-80 object-contain`} />
   </span>
 );
 
