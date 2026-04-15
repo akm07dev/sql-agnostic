@@ -51,3 +51,5 @@ env/
 
 # Supabase 
 supabase/.temp
+# Monaco Editor self-hosted files
+/public/vs/

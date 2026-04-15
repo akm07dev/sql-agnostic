@@ -1,5 +1,6 @@
 "use client";
 
+import "@/lib/monaco-config";
 import { Editor } from "@monaco-editor/react";
 import { useIsMobile } from "@/hooks/useIsMobile";
 

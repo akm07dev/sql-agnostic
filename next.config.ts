@@ -2,10 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   /**
-   * Custom webpack splitChunks config for production builds.
-   * Turbopack bundles the entire React DOM runtime into a single chunk (~226KB)
-   * which triggers Zscaler's deep packet inspection on corporate networks.
-   * This splits it into smaller, less suspicious pieces.
+   * Custom webpack config for production builds.
+   * 1. splitChunks: Break React DOM into smaller chunks to avoid Zscaler blocks
    */
   webpack: (config, { isServer }) => {
     if (!isServer) {
@@ -17,7 +15,7 @@ const nextConfig: NextConfig = {
             ...((config.optimization?.splitChunks as any)?.cacheGroups || {}),
             // Split React DOM into its own named chunk
             reactDom: {
-              test: /[\\/]node_modules[\\/]react-dom[\\/]/,
+              test: /[\\/]node_modules[\\/]react-dom[\\/].*\.(js|mjs)$/,
               name: "lib-react-dom",
               chunks: "all" as const,
               priority: 40,
@@ -25,7 +23,7 @@ const nextConfig: NextConfig = {
             },
             // Split React scheduler separately
             scheduler: {
-              test: /[\\/]node_modules[\\/]scheduler[\\/]/,
+              test: /[\\/]node_modules[\\/]scheduler[\\/].*\.(js|mjs)$/,
               name: "lib-scheduler",
               chunks: "all" as const,
               priority: 35,
@@ -33,7 +31,7 @@ const nextConfig: NextConfig = {
             },
             // Group remaining framework code
             framework: {
-              test: /[\\/]node_modules[\\/](react|next)[\\/]/,
+              test: /[\\/]node_modules[\\/](react|next)[\\/].*\.(js|mjs)$/,
               name: "lib-framework",
               chunks: "all" as const,
               priority: 30,
