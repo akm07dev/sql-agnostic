@@ -4,9 +4,10 @@
  */
 
 /**
- * Simple Icons via jsDelivr CDN for dialect logos.
+ * Self-hosted Simple Icons from /public/icons/ for dialect logos.
+ * These are served from the same origin, avoiding corporate network CDN blocks.
  */
-const SI = (slug: string) => `https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/${slug}.svg`;
+const SI = (slug: string) => `/icons/${slug}.svg`;
 
 /**
  * Generic database SVG icon as a data URI fallback for dialects without a brand icon.
