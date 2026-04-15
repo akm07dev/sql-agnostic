@@ -72,6 +72,7 @@ flowchart LR
 | 🔄 **Model Fallback** | 5-model chain for 99%+ availability |
 | 📝 **Monaco Editor** | VS Code-quality editing with syntax highlighting |
 | 🆚 **Visual Diff** | Side-by-side comparison of transpiler vs AI output |
+| 🛡️ **Corporate Ready** | 100% self-hosted assets with zero CDN dependencies to bypass strict VPNs & Zscaler proxies |
 | 🔐 **Secure Auth** | JWT verification via JWKS, CSRF protection, tiered rate limiting |
 | 💰 **Free Tier** | 5 conversions/min as guest, 20/min when signed in |
 | 📊 **Activity Dashboard** | Global vs personal KPI comparison: usage, AI refinements, approval rating, positive ratings |

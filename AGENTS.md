@@ -55,6 +55,13 @@ Next.js App Router requires `useSearchParams()` to be wrapped in a `<Suspense>` 
 - **Desktop**: Monaco Editor (VS Code engine, full IntelliSense)
 - **Mobile/Tablet**: CodeMirror (lightweight, touch-friendly)
 
+### Corporate Network Resilience (Zscaler / DPI Proxies)
+To circumvent Deep Packet Inspection engines blocking React chunks or external CDNs:
+- **Zero CDNs**: All SVGs (dialects, UI elements) are self-hosted in `/public/icons/`.
+- **Self-hosted Monaco**: `monaco-editor` is copied into `/public/vs/` via a `postinstall` script and internally hooked by `src/lib/monaco-config.ts`. It never touches jsDelivr.
+- **Webpack Chunking**: `next.config.ts` contains custom `splitChunks` (via `--webpack`) targeting `.js` extensions specifically to decouple heavy React DOM cores so heuristic chunk blocks bypass Zscaler. Next.js still uses Turbopack in `dev`.
+- **Graceful UI Fallback**: If an internal React chunk or script completely fails to load over the network, vanilla JS embedded natively into `src/app/layout.tsx`'s `<head>` will intercept `error` hooks and automatically soft redirect the user to `/fallback.html`, an isolated zero-JS static explainer page.
+
 ## File Conventions
 
 - `src/proxy.ts` — This is **not** custom middleware. It's Next.js 16's renamed `middleware.ts` (the export is `proxy` instead of `middleware`).
