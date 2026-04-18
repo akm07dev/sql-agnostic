@@ -1,7 +1,7 @@
 # SQLAgnostic
 
 <p align="center">
-  <strong>Convert SQL queries between 31+ database dialects</strong>
+  <strong>Convert SQL queries between 32+ database dialects</strong>
 </p>
 
 <p align="center">
@@ -67,7 +67,7 @@ flowchart LR
 
 | Feature | Description |
 |---------|-------------|
-| 🔀 **31 SQL Dialects** | PostgreSQL, MySQL, SQL Server, Oracle, Snowflake, BigQuery, DuckDB, ClickHouse, and 24 more |
+| 🔀 **32 SQL Dialects** | PostgreSQL, MySQL, SQL Server, Oracle, Snowflake, BigQuery, DuckDB, ClickHouse, and 24 more |
 | 🤖 **AI Refinement** | Optional Groq-powered improvements with guard model security |
 | 🔄 **Model Fallback** | 5-model chain for 99%+ availability |
 | 📝 **Monaco Editor** | VS Code-quality editing with syntax highlighting |
@@ -89,7 +89,7 @@ flowchart LR
 
 ### Backend
 - **FastAPI** (async Python, Pydantic validation)
-- **SQLGlot** (MIT license, 31+ dialect support)
+- **SQLGlot** (MIT license, 32+ dialect support)
 - **Groq** (AI refinement with model fallback)
 - **Supabase** (JWT auth, PostgreSQL)
 - **SlowAPI** (rate limiting)
@@ -219,12 +219,15 @@ sql-agnostic/
 │   │   └── dbService.ts           # saveTranslation(), updateTranslation(), saveFeedback()
 │   ├── lib/
 │   │   ├── constants.ts           # SQL_LIMITS, AUTH_MESSAGES, API_ENDPOINTS
-│   │   ├── dialects.ts            # 31 dialect definitions
+│   │   ├── dialects.ts            # 32 dialect definitions
 │   │   └── utils.ts               # cn() utility
 │   ├── types/sql.ts
 │   └── utils/supabase/            # Supabase client factories
 ├── public/
-└── AGENTS.md                      # AI assistant context (this file)
+│   ├── icons/                 # Self-hosted SVG icons (replaces jsDelivr)
+│   ├── vs/                    # Self-hosted Monaco editor (replaces jsDelivr)
+│   └── fallback.html          # Static network fallback page
+└── AGENTS.md                  # AI assistant context
 ```
 
 ## 🔒 Security Model

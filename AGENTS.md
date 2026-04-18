@@ -8,7 +8,7 @@ This file provides context for AI coding agents working on this codebase.
 
 ## Tech Stack
 
-- **Frontend**: Next.js 16 (App Router, React 19, TypeScript, Tailwind CSS v4, shadcn/ui)
+- **Frontend**: Next.js 16.2+ (App Router, React 19, TypeScript, Tailwind CSS v4, shadcn/ui)
 - **Backend**: Python FastAPI with SQLGlot for SQL transpilation, Groq SDK for AI refinement
 - **Auth**: Supabase Auth (Google SSO + email/password), managed via HttpOnly cookies
 - **Email**: Resend (configured as SMTP in Supabase Dashboard, not in code)
@@ -16,7 +16,7 @@ This file provides context for AI coding agents working on this codebase.
 
 ## Architecture Overview
 
-Next.js acts as a BFF (Backend-for-Frontend). The `src/proxy.ts` file (Next.js 16's replacement for `middleware.ts`) handles Supabase session refresh on every request. All `/api/*` routes are rewritten to FastAPI (`http://127.0.0.1:53321`) in development via `next.config.ts`.
+Next.js acts as a BFF (Backend-for-Frontend). The `src/proxy.ts` file (Next.js 16.2's replacement for `middleware.ts`) handles Supabase session refresh on every request. All `/api/*` routes are rewritten to FastAPI (`http://127.0.0.1:53321`) in development via `next.config.ts`.
 
 FastAPI independently verifies Supabase JWTs using RS256 asymmetric verification via the JWKS endpoint. It never needs the JWT secret — only the public key.
 
@@ -64,7 +64,7 @@ To circumvent Deep Packet Inspection engines blocking React chunks or external C
 
 ## File Conventions
 
-- `src/proxy.ts` — This is **not** custom middleware. It's Next.js 16's renamed `middleware.ts` (the export is `proxy` instead of `middleware`).
+- `src/proxy.ts` — This is **not** custom middleware. It's Next.js 16.2's renamed `middleware.ts` (the export is `proxy` instead of `middleware`).
 - `src/app/login/actions.ts` — Server actions for auth (signUp, signIn, signOut, resetPassword, updatePassword)
 - `src/app/login/reset/` — Password reset flow page
 - `src/app/login/update-password/` — Password update flow page

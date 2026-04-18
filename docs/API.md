@@ -1,4 +1,4 @@
-﻿# API Reference
+# API Reference
 
 Base path: `/api`
 
@@ -95,6 +95,35 @@ AI refinement endpoint for semantic polishing after deterministic transpilation.
 ### Limits
 
 - Authenticated: 5 requests/minute
+
+## `GET /api/public/feedback`
+
+Aggregate feedback metrics for the dashboard. No authentication required.
+
+### Response
+
+```json
+{
+  "total_feedback": 150,
+  "positive_feedback": 140,
+  "negative_feedback": 10,
+  "positive_percentage": 93.3,
+  "ai_refined_count": 45
+}
+```
+
+## `GET /api/personal/feedback`
+
+Current user's feedback metrics. Requires Supabase JWT.
+
+## `GET /api/personal/transactions`
+
+Current user's paginated translation history. Requires Supabase JWT.
+
+### Query Parameters
+
+- `page`: Page number (default: 1)
+- `limit`: Items per page (default: 10, max: 100)
 
 ## Dialects
 

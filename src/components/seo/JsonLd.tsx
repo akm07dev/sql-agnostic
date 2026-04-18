@@ -12,7 +12,7 @@ export function JsonLd() {
     url: "https://sql-agnostic.akm07.dev",
     image: "https://sql-agnostic.akm07.dev/opengraph-image",
     description:
-      "Convert SQL queries between 31+ database dialects including PostgreSQL, MySQL, SQL Server, Oracle, Snowflake, BigQuery, DuckDB, ClickHouse, and more. Built with SQLGlot (MIT license). Features deterministic transpilation, optional AI-powered refinement, side-by-side Monaco editor, and visual diff view.",
+      "Convert SQL queries between 32+ database dialects including PostgreSQL, MySQL, SQL Server, Oracle, Snowflake, BigQuery, DuckDB, ClickHouse, and more. Built with SQLGlot (MIT license). Features deterministic transpilation, optional AI-powered refinement, side-by-side Monaco editor, and visual diff view.",
     author: {
       "@type": "Person",
       name: "akm07",
@@ -29,7 +29,7 @@ export function JsonLd() {
       url: "https://akm07.dev",
     },
     featureList: [
-      "31 SQL dialect support including PostgreSQL, MySQL, SQL Server, Oracle, Snowflake, BigQuery, DuckDB, ClickHouse, Redshift, Databricks, Spark, and more",
+      "32 SQL dialect support including PostgreSQL, MySQL, SQL Server, Oracle, Snowflake, BigQuery, DuckDB, ClickHouse, Redshift, Databricks, Spark, and more",
       "Deterministic SQL transpilation via SQLGlot",
       "AI-powered query refinement with Groq",
       "Side-by-side Monaco editor interface",
@@ -65,7 +65,7 @@ export function JsonLd() {
     name: "SQLAgnostic",
     url: "https://sql-agnostic.akm07.dev",
     description:
-      "Free online SQL converter supporting 31+ database dialects. Convert between PostgreSQL, MySQL, SQL Server, Oracle, Snowflake, BigQuery, DuckDB, ClickHouse, and more. Built with SQLGlot and AI refinement.",
+      "Free online SQL converter supporting 32+ database dialects. Convert between PostgreSQL, MySQL, SQL Server, Oracle, Snowflake, BigQuery, DuckDB, ClickHouse, and more. Built with SQLGlot and AI refinement.",
     author: {
       "@type": "Person",
       name: "akm07",
@@ -90,7 +90,7 @@ export function JsonLd() {
         name: "What SQL dialects does SQLAgnostic support?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "SQLAgnostic supports 31 SQL dialects including PostgreSQL, MySQL, SQL Server (T-SQL), Oracle, SQLite, Snowflake, Google BigQuery, DuckDB, ClickHouse, AWS Athena, Amazon Redshift, Databricks, Apache Spark, Trino, Presto, StarRocks, SingleStore, Teradata, Exasol, Materialize, RisingWave, Apache Druid, Apache Hive, Apache Drill, Apache Doris, Dremio, Dune, PRQL, Solr, Tableau, and Microsoft Fabric.",
+          text: "SQLAgnostic supports 32 SQL dialects including PostgreSQL, MySQL, SQL Server (T-SQL), Oracle, SQLite, Snowflake, Google BigQuery, DuckDB, ClickHouse, AWS Athena, Amazon Redshift, Databricks, Apache Spark, Trino, Presto, StarRocks, SingleStore, Teradata, Exasol, Materialize, RisingWave, Apache Druid, Apache Hive, Apache Drill, Apache Doris, Dremio, Dune, PRQL, Solr, Tableau, and Microsoft Fabric.",
         },
       },
       {

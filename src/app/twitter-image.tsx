@@ -2,7 +2,7 @@ import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
 
-export const alt = "SQLAgnostic - SQL Dialect Converter for 31+ Databases";
+export const alt = "SQLAgnostic - SQL Dialect Converter for 32+ Databases";
 export const size = {
   width: 1200,
   height: 630,
@@ -89,7 +89,7 @@ export default async function Image() {
             maxWidth: "900px",
           }}
         >
-          SQL Dialect Converter for 31+ Databases
+          SQL Dialect Converter for 32+ Databases
         </p>
 
         {/* Subtitle */}
@@ -127,7 +127,7 @@ export default async function Image() {
             "BigQuery",
             "DuckDB",
             "ClickHouse",
-            "+23 more",
+            "+24 more",
           ].map((db) => (
             <div
               key={db}

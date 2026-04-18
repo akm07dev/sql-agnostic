@@ -1,6 +1,6 @@
 /**
  * @file dialects.ts
- * @description Provides precise JSDoc definitions and typings for all 20+ SQL dialects supported by SQLGlot.
+ * @description Provides precise JSDoc definitions and typings for all 32+ SQL dialects supported by SQLGlot.
  */
 
 /**

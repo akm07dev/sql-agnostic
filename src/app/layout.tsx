@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SQLAgnostic | SQL Dialect Converter for 31+ Databases",
-  description: "Convert SQL queries between 31+ database dialects. Free online tool built with SQLGlot (MIT license) featuring AI-powered refinement, side-by-side Monaco editor, and visual diff view. Supports PostgreSQL, MySQL, SQL Server, Oracle, Snowflake, BigQuery, DuckDB, ClickHouse, and more.",
+  title: "SQLAgnostic | SQL Dialect Converter for 32+ Databases",
+  description: "Convert SQL queries between 32+ database dialects. Free online tool built with SQLGlot (MIT license) featuring AI-powered refinement, side-by-side Monaco editor, and visual diff view. Supports PostgreSQL, MySQL, SQL Server, Oracle, Snowflake, BigQuery, DuckDB, ClickHouse, and more.",
   keywords: [
     "SQL dialect converter",
     "SQL transpiler",
@@ -87,8 +87,8 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: "SQLAgnostic | SQL Dialect Converter for 31+ Databases",
-    description: "Convert SQL between 31+ database dialects including PostgreSQL, MySQL, SQL Server, Oracle, Snowflake, BigQuery, DuckDB, ClickHouse, and more. Features AI-powered refinement, Monaco editor, and visual diff view.",
+    title: "SQLAgnostic | SQL Dialect Converter for 32+ Databases",
+    description: "Convert SQL between 32+ database dialects including PostgreSQL, MySQL, SQL Server, Oracle, Snowflake, BigQuery, DuckDB, ClickHouse, and more. Features AI-powered refinement, Monaco editor, and visual diff view.",
     url: "https://sql-agnostic.akm07.dev",
     siteName: "SQLAgnostic",
     locale: "en_US",
@@ -96,8 +96,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "SQLAgnostic | SQL Dialect Converter for 31+ Databases",
-    description: "Convert SQL between 31+ database dialects. Features AI-powered refinement, Monaco editor, and visual diff view. Free to use.",
+    title: "SQLAgnostic | SQL Dialect Converter for 32+ Databases",
+    description: "Convert SQL between 32+ database dialects. Features AI-powered refinement, Monaco editor, and visual diff view. Free to use.",
   },
   category: "developer tools",
   classification: "Software Application",

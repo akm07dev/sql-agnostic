@@ -40,7 +40,7 @@ flowchart LR
 - Deterministic, reproducible conversions
 - No hallucinations or syntax errors
 - Fast execution (< 100ms)
-- 31 dialect support out of the box
+- 32 dialect support out of the box
 
 **AI refinement handles:**
 - Semantic optimization (e.g., `ROW_NUMBER()` → MySQL session variables)
@@ -89,18 +89,41 @@ Next.js SSR can split large cookies into chunks (`cookie.0`, `cookie.1`, etc.). 
 
 ```python
 def _extract_jwt_from_cookies(request: Request) -> str | None:
-    # Find base cookie name (handles chunked cookies)
+    """
+    Parse the Supabase auth cookie (possibly chunked by Next.js SSR)
+    and return the raw access_token string, or None.
+    """
+    base_name = None
+
     for key in request.cookies.keys():
         if key.startswith("sb-") and "-auth-token" in key:
             if key.endswith("-auth-token"):
-                return request.cookies[key]
-            # Reassemble chunks
-            chunks = []
-            for i in range(10):
-                chunk_name = f"{base_name}.{i}"
-                if chunk_name in request.cookies:
-                    chunks.append(request.cookies[chunk_name])
-            return "".join(chunks)
+                base_name = key
+                break
+            elif "." in key and key.rsplit(".", 1)[-1].isdigit():
+                base_name = key.rsplit(".", 1)[0]
+                break
+
+    if not base_name:
+        return None
+
+    # Single cookie or chunked
+    if base_name in request.cookies:
+        raw_val = request.cookies[base_name]
+    else:
+        chunks = []
+        for i in range(10):
+            chunk_name = f"{base_name}.{i}"
+            if chunk_name in request.cookies:
+                chunks.append(request.cookies[chunk_name])
+            else:
+                break
+        if not chunks:
+            return None
+        raw_val = "".join(chunks)
+    
+    # ... further decoding logic ...
+    return raw_val # (simplified for walkthrough)
 ```
 
 This ensures SSR compatibility while maintaining security.

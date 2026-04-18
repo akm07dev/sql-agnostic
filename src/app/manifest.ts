@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "SQLAgnostic",
     short_name: "SQLAgnostic",
-    description: "Convert SQL queries between 31+ database dialects. Features deterministic transpilation, AI-powered refinement, Monaco editor, and visual diff view. Built with SQLGlot (MIT license). Free to use.",
+    description: "Convert SQL queries between 32+ database dialects. Features deterministic transpilation, AI-powered refinement, Monaco editor, and visual diff view. Built with SQLGlot (MIT license). Free to use.",
     start_url: "/",
     display: "standalone",
     background_color: "#f8fafc",
