@@ -1,4 +1,4 @@
-﻿# Deployment
+# Deployment
 
 This project is deployed on Vercel and integrated with Supabase + Resend.
 
@@ -28,7 +28,7 @@ Required:
 
 - Next.js app and Python backend are packaged for Vercel deployment.
 - AI requests are rate limited and authenticated on backend.
-- Keep-warm workflow can be used to reduce cold-start latency.
+- Daily keep-warm workflow (GitHub Action) uses the `/api/public/feedback` endpoint to maintain database activity and prevent Supabase from pausing the project.
 
 ## Verification Checklist
 

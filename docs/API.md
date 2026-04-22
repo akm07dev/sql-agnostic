@@ -4,7 +4,7 @@ Base path: `/api`
 
 ## `GET /api/health`
 
-Health check endpoint for uptime and warmup jobs.
+Health check endpoint for uptime and warmup jobs. Note: `/api/public/feedback` is preferred for cron-based warming as it also triggers database activity to prevent Supabase from pausing the project.
 
 ### Response
 
