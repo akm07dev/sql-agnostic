@@ -8,7 +8,7 @@ This file provides context for AI coding agents working on this codebase.
 
 ## Tech Stack
 
-- **Frontend**: Next.js 16 (App Router, React 19, TypeScript, Tailwind CSS v4, shadcn/ui)
+- **Frontend**: Next.js 16.2+ (App Router, React 19, TypeScript, Tailwind CSS v4, shadcn/ui)
 - **Backend**: Python FastAPI with SQLGlot for SQL transpilation, Groq SDK for AI refinement
 - **Auth**: Supabase Auth (Google SSO + email/password), managed via HttpOnly cookies
 - **Email**: Resend (configured as SMTP in Supabase Dashboard, not in code)
@@ -16,7 +16,7 @@ This file provides context for AI coding agents working on this codebase.
 
 ## Architecture Overview
 
-Next.js acts as a BFF (Backend-for-Frontend). The `src/proxy.ts` file (Next.js 16's replacement for `middleware.ts`) handles Supabase session refresh on every request. All `/api/*` routes are rewritten to FastAPI (`http://127.0.0.1:53321`) in development via `next.config.ts`.
+Next.js acts as a BFF (Backend-for-Frontend). The `src/proxy.ts` file (Next.js 16.2's replacement for `middleware.ts`) handles Supabase session refresh on every request. All `/api/*` routes are rewritten to FastAPI (`http://127.0.0.1:53321`) in development via `next.config.ts`.
 
 FastAPI independently verifies Supabase JWTs using RS256 asymmetric verification via the JWKS endpoint. It never needs the JWT secret — only the public key.
 
@@ -55,9 +55,16 @@ Next.js App Router requires `useSearchParams()` to be wrapped in a `<Suspense>` 
 - **Desktop**: Monaco Editor (VS Code engine, full IntelliSense)
 - **Mobile/Tablet**: CodeMirror (lightweight, touch-friendly)
 
+### Corporate Network Resilience (Zscaler / DPI Proxies)
+To circumvent Deep Packet Inspection engines blocking React chunks or external CDNs:
+- **Zero CDNs**: All SVGs (dialects, UI elements) are self-hosted in `/public/icons/`.
+- **Self-hosted Monaco**: `monaco-editor` is copied into `/public/vs/` via a `postinstall` script and internally hooked by `src/lib/monaco-config.ts`. It never touches jsDelivr.
+- **Webpack Chunking**: `next.config.ts` contains custom `splitChunks` (via `--webpack`) targeting `.js` extensions specifically to decouple heavy React DOM cores so heuristic chunk blocks bypass Zscaler. Next.js still uses Turbopack in `dev`.
+- **Graceful UI Fallback**: If an internal React chunk or script completely fails to load over the network, vanilla JS embedded natively into `src/app/layout.tsx`'s `<head>` will intercept `error` hooks and automatically soft redirect the user to `/fallback.html`, an isolated zero-JS static explainer page.
+
 ## File Conventions
 
-- `src/proxy.ts` — This is **not** custom middleware. It's Next.js 16's renamed `middleware.ts` (the export is `proxy` instead of `middleware`).
+- `src/proxy.ts` — This is **not** custom middleware. It's Next.js 16.2's renamed `middleware.ts` (the export is `proxy` instead of `middleware`).
 - `src/app/login/actions.ts` — Server actions for auth (signUp, signIn, signOut, resetPassword, updatePassword)
 - `src/app/login/reset/` — Password reset flow page
 - `src/app/login/update-password/` — Password update flow page

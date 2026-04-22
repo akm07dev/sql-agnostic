@@ -1,4 +1,4 @@
-﻿# Architecture
+# Architecture
 
 Visual system architecture and component interactions for SQLAgnostic.
 
@@ -6,7 +6,7 @@ Visual system architecture and component interactions for SQLAgnostic.
 
 ```mermaid
 flowchart TD
-    subgraph Frontend["Next.js 16 Frontend"]
+    subgraph Frontend["Next.js 16.2+ Frontend"]
         UI["React UI<br/>(Monaco Editor)"]
         Hooks["useSql.ts<br/>State Management"]
         Service["sqlService.ts<br/>API Client"]
@@ -252,7 +252,7 @@ CONFIG = {
 ```mermaid
 flowchart TB
     subgraph Vercel["Vercel Edge Network"]
-        NextJS["Next.js 16<br/>Frontend"]
+        NextJS["Next.js 16.2+<br/>Frontend"]
         Python["Python Serverless<br/>FastAPI"]
     end
     
@@ -294,9 +294,9 @@ All environment variables are in `.env.local` at the project root.
 
 | Technology | Rationale |
 |------------|-----------|
-| **Next.js 16** | App Router, React 19, built-in OG image generation |
+| **Next.js 16.2+** | App Router, React 19, built-in OG image generation |
 | **FastAPI** | Async Python, Pydantic validation, automatic OpenAPI |
-| **SQLGlot** | MIT license, 31+ dialect support, deterministic transpilation |
+| **SQLGlot** | MIT license, 32+ dialect support, deterministic transpilation |
 | **Groq** | Fast inference, cheap rates, good model selection |
 | **Supabase** | Open source, JWT auth, free tier generous |
 | **Monaco Editor** | VS Code editor, SQL syntax highlighting, diff view |
